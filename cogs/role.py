@@ -7,17 +7,17 @@ from discord.utils import get
 class role_menu(commands.Cog):
     def __init__(self,bot,ctx) -> None:
         self.bot = bot
-        ctx = ctx
+        self.ctx = ctx
 
     @commands.command()
-    async def role(self):
+    async def role(self,ctx):
         Embed = discord.Embed(title="ロールメニュー",
                             color=0xffffff,
                             description="ここではロールに関する操作ができます。")
         Embed.add_field(name=(f"・一覧"), value=(f"ロールの一覧を表示し付与することもできます"))
         Embed.add_field(name=(f'・追加'), value=(f'フォーム形式でロールを作成できます'))
         
-        await self.ctx.send(embed=Embed)
+        await ctx.send(embed=Embed)
 
     class RoleMenuButtons(discord.ui.View):
         @discord.ui.button(
@@ -39,4 +39,4 @@ class role_menu(commands.Cog):
 
 async def setup(bot):
     print(f"role読み込み")
-    await bot.add_cog(role(bot))
+    await bot.add_cog(role_menu(bot))
