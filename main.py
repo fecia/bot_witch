@@ -62,8 +62,8 @@ class menu_button(discord.ui.View):
         style=discord.ButtonStyle.primary,
     )
     async def callback(self, interaction: discord.Interaction,button: discord.ui.Button):
-        role_cog = bot.get_cog('cogs.role')
-        await role_cog.Role_Menu(ctx.author, money)
+        role_cog = bot.get_cog('role')
+        await role_cog.Role_Menu()
 
 # -----------------------------------------
 bot.run(Token)

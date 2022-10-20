@@ -9,8 +9,8 @@ class role_menu(commands.Cog):
         self.bot = bot
         self.ctx = ctx
 
-    @commands.command()
-    async def role(self,ctx):
+    
+    async def role_main(self,ctx):
         Embed = discord.Embed(title="ロールメニュー",
                             color=0xffffff,
                             description="ここではロールに関する操作ができます。")
