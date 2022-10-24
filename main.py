@@ -1,7 +1,7 @@
 from errno import EPERM
 from mimetypes import init
 import os
-import py_compile
+
 from typing import overload
 from attr import attributes
 import discord
@@ -10,7 +10,7 @@ from discord.ext import commands
 from discord.utils import get
 from tokenize import Token
 from dotenv import load_dotenv
-import interactions
+
 
 from cogs.role import role_menu
 load_dotenv()
@@ -116,24 +116,33 @@ async def test(ctx):
     views = test_button()
     await ctx.send(embed=embed,view=views)
 
+def change_embed() -> discord.Embed:
+    Embeds = discord.Embed(title="正しいよ正しいよ",
+    color=0xffffff,
+    description="正しいよ"
+    )
+    Embeds.add_field(name="!正しいよ",value="正しいよ",inline=True)
+    return Embeds
+
 class test_button(discord.ui.View):
     def __init__(self, *, timeout = None):
         super().__init__(timeout=timeout)
-
 
     @discord.ui.button(
         label=(f'エディット'),
         style=discord.ButtonStyle.primary,
     )
 
-    async def callback(self, interaction: discord.Interaction,button: discord.ui.Button):
-        sent_message = await interaction.original_response()
-        Embeds = discord.Embed(title="正しいよ正しいよ",
-        color=0xffffff,
-        description="正しいよ"
-        )
-        Embeds.add_field(name="!正しいよ",value="正しいよ",inline=True)
-        await sent_message.edit(embeds=Embeds)
+    async def test(self, interaction: discord.Interaction,button: discord.ui.Button):
+        # # sent_message = await interaction.original_response()
+        # Embeds = discord.Embed(title="正しいよ正しいよ",
+        # color=0xffffff,
+        # description="正しいよ"
+        # )
+        # Embeds.add_field(name="!正しいよ",value="正しいよ",inline=True)
+        Embeds = change_embed()
+        await interaction.response.edit_message(embed=Embeds)
+        
         
 
 
