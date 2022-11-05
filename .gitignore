@@ -109,6 +109,9 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+#付け足したよよおよよよよ
+guilds
+
 
 # Spyder project settings
 .spyderproject
