@@ -58,13 +58,19 @@ class embedbox():
             Embeds.set_footer(text=(f"{self.author_name}が作成"),icon_url=self.author_image)
         return Embeds
 
+    def e_rolelist(self,guild :discord.Guild) -> discord.Embed:
+        Embeds = discord.Embed(color=0xffffff,title="ロールリスト",description="descriotionいいのない")
+        guild_id = guild.id
+        
+        with open()
+
 
     # ---------------------------------------------------------
     def doTree(self,channel:discord.Thread,isTree:bool = False):
         if(isTree):
             pass
 
-# いったん凍結　（TypeError: 'RoleMenuButtons' object is not callable）発生
+# いったん凍結　（TypeError: 'RoleMenuButtons' object is not callable）発生-----------------------------------
 class unlockbutton(discord.ui.Button):
     def __init__(self,e_page:list,v_page:list):
         super().__init__(label='限定モード解除',style=discord.ButtonStyle.red)
@@ -80,7 +86,7 @@ class unlockbutton(discord.ui.Button):
         view = judge.v_isOnly(self.v_page[-1])
         self.v_page.append(view)
         await interaction.response.edit_message(embed=self.e_page[-1],view=self.v_page[-1])
-
+# --------------------------------------------------------------------------------------------------------------
 
 class prevbutton(discord.ui.Button):
     def __init__(self,e_page,v_page):
@@ -159,7 +165,7 @@ class RoleMenuButtons(discord.ui.View):
     style=discord.ButtonStyle.primary,)
 
     async def list(self, interaction: discord.Interaction,button: discord.ui.Button):
-        pass
+        await interaction.response.edit_message()
 # 第二ボタン
     @discord.ui.button(
     label=(f'作成'),
