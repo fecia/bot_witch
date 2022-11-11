@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 import random
 import json
+import datetime
 
 from cogs.role import *
 # ---------------------------------------
@@ -133,18 +134,55 @@ class menu_button(discord.ui.View):
 @bot.command()
 async def register(ctx):
     guild :discord.Guild= ctx.guild
-    json_data = {
+    json_data ={
     "name": guild.name,
     "id" : guild.id,
+    "registerdate": str(datetime.datetime.now()),
     "role":[]
     }
     path = "./bot_witch/guilds/" + str(guild.id) + ".json"
-    with open(path, "w") as file:
-        json.dump(json_data,file,indent=4)
+    if (os.path.isfile(path)):
+        embeds = discord.Embed(color=0x880088,title="すでに登録済みです",description="一部の保存されているデータが消去される可能性があります。\n本当に変更しますか？")
+        await ctx.send(embed=embeds,view=registerconfirm())
+        return
+    with open(path, "a+") as file:
+        json.dump(json_data,file,indent=4)    # 追加する値を入力
     await ctx.send("登録完了しました")
 
     # with open("sample.json", "w") as f:
     #     json.dump(json_data, f)
+class registerconfirm(discord.ui.View):
+    def __init__(self,*,timeout=None) -> None:
+        super().__init__(timeout=timeout)
+    
+    @discord.ui.button(
+    label=(f'変更する'),
+    style=discord.ButtonStyle.green,)
+
+    async def callback(self, interaction: discord.Interaction,button: discord.ui.Button):
+        guild = interaction.guild
+        json_data ={
+        "name": guild.name,
+        "id" : guild.id,
+        "registerdate": str(datetime.datetime.now()),
+        "role":[]
+        }
+        path = "./bot_witch/guilds/" + str(guild.id) + ".json"
+        with open(path, "w") as file:
+            json.dump(json_data,file,indent=4)    # 追加する値を入力
+        embed = discord.Embed(color=0x00ff00,description="登録完了しました")
+        await interaction.response.edit_message(embed=embed,view=None)
+
+    @discord.ui.button(
+    label=(f'変更しない'),
+    style=discord.ButtonStyle.red,)
+    async def stop(self, interaction: discord.Interaction,button: discord.ui.Button):
+        embed = discord.Embed(color=0xff0000,description="中止しました")
+        await interaction.response.edit_message(embed=embed,view=None)
+
+
+
+
 
 
 # ------------------------------------------

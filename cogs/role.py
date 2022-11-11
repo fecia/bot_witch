@@ -4,6 +4,7 @@ from discord import Embed, Role, SelectOption, User, ui
 from discord.ext import commands
 from discord.utils import get
 import json
+from discord.ui import RoleSelect
 
 # -----------------------------------------------------------
 class judgeisOnly():
@@ -62,7 +63,7 @@ class embedbox():
         Embeds = discord.Embed(color=0xffffff,title="ロールリスト",description="descriotionいいのない")
         guild_id = guild.id
         
-        with open()
+        # with open()
 
 
     # ---------------------------------------------------------
@@ -165,7 +166,11 @@ class RoleMenuButtons(discord.ui.View):
     style=discord.ButtonStyle.primary,)
 
     async def list(self, interaction: discord.Interaction,button: discord.ui.Button):
-        await interaction.response.edit_message()
+        guild = interaction.guild
+        path = "./bot_witch/guilds/" + str(guild.id) + ".json"
+        views = roleview()
+
+        await interaction.response.edit_message(embed=None,view=views)
 # 第二ボタン
     @discord.ui.button(
     label=(f'作成'),
@@ -257,6 +262,14 @@ class RoleAttach(discord.ui.View):
     @discord.ui.button(label='いいえ', style=discord.ButtonStyle.grey)
     async def no(self, interaction: discord.Interaction,button: discord.ui.Button):
         await interaction.response.send_message(f'終了します', ephemeral=True)
+class roleview(discord.ui.View):
+    def __init__(self, *, timeout=None):
+        super().__init__(timeout=timeout)
+        self.add_item(roleselecter())
+
+class roleselecter(discord.ui.RoleSelect):
+    def __init__(self,*,customid="roleselecter") -> None:
+        super().__init__()
 
 async def setup(bot):
     print(f"role読み込み")
