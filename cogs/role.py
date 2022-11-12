@@ -168,7 +168,8 @@ class RoleMenuButtons(discord.ui.View):
     async def list(self, interaction: discord.Interaction,button: discord.ui.Button):
         guild = interaction.guild
         path = "./bot_witch/guilds/" + str(guild.id) + ".json"
-        views = roleview()
+        # views = roleview()
+        views =roleview_json(guild=guild)
 
         await interaction.response.edit_message(embed=None,view=views)
 # 第二ボタン
@@ -262,6 +263,7 @@ class RoleAttach(discord.ui.View):
     @discord.ui.button(label='いいえ', style=discord.ButtonStyle.grey)
     async def no(self, interaction: discord.Interaction,button: discord.ui.Button):
         await interaction.response.send_message(f'終了します', ephemeral=True)
+
 class roleview(discord.ui.View):
     def __init__(self, *, timeout=None):
         super().__init__(timeout=timeout)
@@ -270,6 +272,28 @@ class roleview(discord.ui.View):
 class roleselecter(discord.ui.RoleSelect):
     def __init__(self,*,customid="roleselecter") -> None:
         super().__init__()
+
+class roleview_json(discord.ui.View):
+    def __init__(self, *,guild,timeout=None):
+        super().__init__(timeout=timeout)
+        self.add_item(roleselecter_json(guild=guild))
+
+class roleselecter_json(discord.ui.Select):
+    def __init__(self,guild,customid="roleselecter_json") -> None:
+        options = []
+        self.guild : discord.Guild = guild
+        path = "./bot_witch/guilds/" + str(self.guild.id) + ".json"
+
+        with open(path,"r") as file:
+            rolelist = json.load(file)
+            for jsonroleid in rolelist["role"]:
+                
+                role :discord.Role = self.guild.get_role(jsonroleid)
+                
+                options.append(discord.SelectOption(label=(f"{role.name}")))
+        
+        super().__init__(options=options)
+
 
 async def setup(bot):
     print(f"role読み込み")
