@@ -179,7 +179,8 @@ class RoleMenuButtons(discord.ui.View):
         judge = judgeisOnly(interaction.user,self.isOnly,self.e_page,self.v_page)
         Embeds = evs.e_rolelist(interaction.guild)
         self.e_page.append(Embeds)
-        views = judge.v_isOnly(roleview)
+        # views = judge.v_isOnly(roleview)
+        views = roleview_json(guild=interaction.guild,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page)
         await interaction.response.edit_message(embed=Embeds,view=views)
 # 第二ボタン
     @discord.ui.button(
@@ -217,17 +218,8 @@ class Role_question(ui.Modal, title='ロール作成フォーム'):
         evs = embedbox(author,self.isOnly)
 
         newrole = await guild.create_role(name=R_name,colour=R_color,hoist=0,mentionable=1,reason=(f"{author.name}によって作成(id:{author.id})"))
-        botroles = guild.me.roles
-        del botroles[0]
-        for botrolelist in botroles:
-            print(botrolelist.name)
-            print(bool(botrolelist.is_bot_managed))
-            print(bool(botrolelist.is_integration))
-            if bool(botrolelist.is_bot_managed) == True:
-                botrole = botrolelist
-                botrolepos = botrole.position
-                break
-        
+        botrolepos = guild.self_role.position
+
         await newrole.edit(position=botrolepos-1)
         path = "./bot_witch/guilds/" + str(guild.id) + ".json"
         with open(path,"r") as file:
@@ -303,12 +295,16 @@ class roleselecter(discord.ui.RoleSelect):
         super().__init__()
 
 class roleview_json(discord.ui.View):
-    def __init__(self, *,guild,timeout=None):
+    def __init__(self, *,guild,e_page:list,isOnly,v_page:list,timeout=None):
         super().__init__(timeout=timeout)
-        self.add_item(roleselecter_json(guild=guild))
+        self.add_item(roleselecter_json(guild=guild,e_page=e_page,v_page=v_page,isOnly=isOnly))
 
 class roleselecter_json(discord.ui.Select):
-    def __init__(self,guild,customid="roleselecter_json") -> None:
+    def __init__(self,*,guild,customid="roleselecter_json",e_page:list,isOnly,v_page:list,timeout=None) -> None:
+        super().__init__()
+        self.e_page = e_page
+        self.v_page = v_page
+        self.isOnly = isOnly
         options = []
         self.guild : discord.Guild = guild
         path = "./bot_witch/guilds/" + str(self.guild.id) + ".json"
@@ -318,8 +314,13 @@ class roleselecter_json(discord.ui.Select):
             for jsonroleid in rolelist["role"]:
                 
                 role :discord.Role = self.guild.get_role(jsonroleid)
-                
+            #     try:
                 options.append(discord.SelectOption(label=(f"{role.name}")))
+            #     except AttributeError:
+            #         rolelist["role"].remove(role)
+            # with open(path,"w") as filew:
+            #     json.dump(rolelist["role"],file["role"],indent=4)
+
         
         super().__init__(options=options)
 
