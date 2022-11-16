@@ -14,7 +14,7 @@ import json
 import random
 
 from cogs.role import *
-
+from cogs.miscellaneous import embedbox_misc
 # ---------------------------------------
 
 bot_prefix = "!"
@@ -29,6 +29,7 @@ bot = commands.Bot(command_prefix=bot_prefix, intents=intents)
 
 coglist = [
     'cogs.role'
+    'cogs.miscellaneous'
 ]
 
 # ---------------------------------------
@@ -61,16 +62,13 @@ async def menu(ctx,isOnly=None):
     author_image = author.display_avatar.url
     # ------------------
     embed = discord.Embed(title="メニュー",
-    color=int(randomcolor, base=16),
-    description="メニューを選択できます。"
-    )
+    color=int(randomcolor, base=16),description="メニューを選択できます。")
     e_page = []
     v_page = []
     embed.add_field(name="!role",value="ロールに関するメニュー",inline=True)
-    embed.add_field(name="name2",value="value2",inline=True)
+    embed.add_field(name="!misc",value="その他、細かいもの",inline=True)
     embed.add_field(name="name3",value="value3",inline=True)
     
-
     if isOnly =="1":
         embed.set_footer(text=(f"{author_name}のみ操作可能"),icon_url=author_image)
         e_page.append(embed)
@@ -80,7 +78,6 @@ async def menu(ctx,isOnly=None):
         e_page.append(embed)
         views = menu_button(e_page=e_page,v_page=v_page)
     v_page.append(views)
-
 
     await ctx.send(embed=e_page[-1],view=v_page[-1])
 
@@ -114,17 +111,26 @@ class menu_button(discord.ui.View):
     )
 
     async def callback(self, interaction: discord.Interaction,button: discord.ui.Button):
-        # c_RoleMenu = role_menu(bot=bot)
-        # Embeds = c_RoleMenu.e_role_top(author=interaction.user,isOnly = self.isOnly)
-        # Views = c_RoleMenu.v_role_top(author=interaction.user,isOnly = self.isOnly)
         evs = embedbox(author=interaction.user,isOnly = self.isOnly)
         Embeds = evs.e_role_top()
         self.e_page.append(Embeds)
         judge = judgeisOnly(author=interaction.user,isOnly = self.isOnly,e_page=self.e_page,v_page=self.v_page)
         Views = judge.v_isOnly(button=RoleMenuButtons)
         await interaction.response.edit_message(embed=Embeds,view=Views,)
-        
-        # await c_RoleMenu.role_top(channel=interaction.channel,author=interaction.user,isOnly=self.isOnly,isTree=self.isTree)
+
+    @discord.ui.button(
+        label=(f'!misc'),
+        style=discord.ButtonStyle.primary,
+    )
+
+    async def callback(self, interaction: discord.Interaction,button: discord.ui.Button):
+        evs = embedbox_misc(author=interaction.user,isOnly = self.isOnly)
+        Embeds = evs.e_role_top()
+        self.e_page.append(Embeds)
+        judge = judgeisOnly(author=interaction.user,isOnly = self.isOnly,e_page=self.e_page,v_page=self.v_page)
+        Views = judge.v_isOnly(button=RoleMenuButtons)
+        await interaction.response.edit_message(embed=Embeds,view=Views,)
+
     @discord.ui.button(
         label=(f'もっかい同じ送る(テスト)'),
         style=discord.ButtonStyle.primary,
@@ -184,55 +190,4 @@ class registerconfirm(discord.ui.View):
         await interaction.response.edit_message(embed=embed,view=None)
 
 
-
-
-
-
-# ------------------------------------------
-#てすと
-# @bot.command()
-# async def test(ctx):
-#     await ctx.message.delete(delay=1)
-#     # 変数作成
-#     randomcolor = str("0x"+''.join([random.choice('0123456789ABCDEF') for j in range(6)]))
-#     author = ctx.author
-#     author_name = author.display_name
-#     author_image = author.display_avatar.url
-#     # ------------------
-#     embed = discord.Embed(title="メニュー",
-#     color=int(randomcolor, base=16),
-#     description="メニューを選択できます。"
-#     )
-#     embed.add_field(name="!fsdfdafae",value="we",inline=True)
-#     views = test_button()
-#     await ctx.send(embed=embed,view=views)
-
-# def change_embed() -> discord.Embed:
-#     Embeds = discord.Embed(title="正しいよ正しいよ",
-#     color=0xffffff,
-#     description="正しいよ"
-#     )
-#     Embeds.add_field(name="!正しいよ",value="正しいよ",inline=True)
-#     return Embeds
-
-# class test_button(discord.ui.View):
-#     def __init__(self, *, timeout = None):
-#         super().__init__(timeout=timeout)
-
-#     @discord.ui.button(
-#         label=(f'エディット'),
-#         style=discord.ButtonStyle.primary,
-#     )
-
-#     async def test(self, interaction: discord.Interaction,button: discord.ui.Button):
-#         # # sent_message = await interaction.original_response()
-#         # Embeds = discord.Embed(title="正しいよ正しいよ",
-#         # color=0xffffff,
-#         # description="正しいよ"
-#         # )
-#         # Embeds.add_field(name="!正しいよ",value="正しいよ",inline=True)
-#         Embeds = change_embed()
-#         await interaction.response.edit_message(embed=Embeds)
-        
-# -----------------------------------------
 bot.run(Token)
