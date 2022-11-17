@@ -14,7 +14,7 @@ import json
 import random
 
 from cogs.role import *
-from cogs.miscellaneous import embedbox_misc
+from cogs.miscellaneous import miscmenu_view, miscmenu_page
 # ---------------------------------------
 
 bot_prefix = "!"
@@ -28,7 +28,7 @@ bot = commands.Bot(command_prefix=bot_prefix, intents=intents)
 # ---------------------------------------
 
 coglist = [
-    'cogs.role'
+    'cogs.role',
     'cogs.miscellaneous'
 ]
 
@@ -110,7 +110,7 @@ class menu_button(discord.ui.View):
         style=discord.ButtonStyle.primary,
     )
 
-    async def callback(self, interaction: discord.Interaction,button: discord.ui.Button):
+    async def gotorole(self, interaction: discord.Interaction,button: discord.ui.Button):
         evs = embedbox(author=interaction.user,isOnly = self.isOnly)
         Embeds = evs.e_role_top()
         self.e_page.append(Embeds)
@@ -123,13 +123,15 @@ class menu_button(discord.ui.View):
         style=discord.ButtonStyle.primary,
     )
 
-    async def callback(self, interaction: discord.Interaction,button: discord.ui.Button):
-        evs = embedbox_misc(author=interaction.user,isOnly = self.isOnly)
-        Embeds = evs.e_role_top()
+    async def gotomisc(self, interaction: discord.Interaction,button: discord.ui.Button):
+        author = interaction.user
+        miscpage = miscmenu_page(author,self.isOnly)
+        Embeds = miscpage.e_misc_menu(0)
+        pagedict = miscpage.allpage()
         self.e_page.append(Embeds)
-        judge = judgeisOnly(author=interaction.user,isOnly = self.isOnly,e_page=self.e_page,v_page=self.v_page)
-        Views = judge.v_isOnly(button=RoleMenuButtons)
-        await interaction.response.edit_message(embed=Embeds,view=Views,)
+        allpage = len(pagedict)
+        Views = miscmenu_view(author=author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page,allpage=allpage)
+        await interaction.response.edit_message(embed=Embeds,view = Views)
 
     @discord.ui.button(
         label=(f'もっかい同じ送る(テスト)'),
