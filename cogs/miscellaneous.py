@@ -199,7 +199,12 @@ class timeinput(ui.Modal, title='ロール作成フォーム'):
     async def on_submit(self, interaction: discord.Interaction,):
         guild = interaction.guild
         author = interaction.user
-        timevalue = self.value_year.value
+        yearvalue = self.value_year.value
+        monthvalue = self.value_month.value
+        dayvalue = self.value_day.value
+        hourvalue = self.value_hour.value
+        timezonevalue = self.value_timezone.value
+
         await interaction.response.send_message((f"あなたは{timevalue}入力"))
 
 
