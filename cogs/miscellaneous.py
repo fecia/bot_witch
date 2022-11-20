@@ -3,8 +3,7 @@ from discord import Embed, Role, SelectOption, User, ui
 from discord.ext import commands
 
 import datetime
-from dateutil.parser import parse
-import pytz
+from zoneinfo import ZoneInfo
 
 from cogs.role import prevbutton
 
@@ -187,7 +186,7 @@ class timeinput(ui.Modal, title='ロール作成フォーム'):
         self.v_page = v_page    
         
 
-    tz_dict = {'PT':'US/Pacific','GMT':'Etc/GMT+0','JST':'Asia/Tokyo','ET':'Etc/GMT-5','CEST':'Etc/GMT+2'}
+    tz_dict = {'PT':'US/Pacific','GMT':'Etc/GMT+0','JST':'Asia/Tokyo','ET':'America/New_York','CEST':'Etc/GMT+2'}
     timeinfo = datetime.datetime.now()
     year = timeinfo.year
     month = timeinfo.month
@@ -201,7 +200,7 @@ class timeinput(ui.Modal, title='ロール作成フォーム'):
     value_timezone = ui.TextInput(label="タイムゾーン",style=discord.TextStyle.short, custom_id=f"timezone",placeholder="タイムゾーンを入力。デフォルト(JST)", required=False)
 
     def formatting(self,obj,inputtz):
-        tz_ = pytz.timezone(self.tz_dict.get(inputtz,'Asia/Tokyo'))
+        tz_ = ZoneInfo(self.tz_dict.get(inputtz,'Asia/Tokyo'))
         time = obj.astimezone(tz_)
         result = time.strftime('%Y年 %m月 %d日 %H時 (%Z)')
         return result
@@ -214,23 +213,23 @@ class timeinput(ui.Modal, title='ロール作成フォーム'):
         valuelist = [self.value_year.value,self.value_month.value,self.value_day.value,self.value_hour.value]
         for _vl in valuelist:
             try:
-                int(_vl,10)
+                valuelist[count] = int(_vl,10)
             except:
                 valuelist[count] = nowtimelist[count]
             finally:
                 count +=1
 
-        tz_dict = {'PT':'US/Pacific','GMT':'Etc/GMT+0','JST':'Asia/Tokyo','ET':'Etc/GMT-5','CEST':'Etc/GMT+2'}
+
         yearvalue = valuelist[0]
         monthvalue = valuelist[1]
         dayvalue = valuelist[2]
         hourvalue = valuelist[3]
-        tz = pytz.timezone(self.tz_dict.get(self.value_timezone.value,'Asia/Tokyo'))
+        tz = ZoneInfo(self.tz_dict.get(self.value_timezone.value,'Asia/Tokyo'))
         timedate = datetime.datetime(yearvalue,monthvalue,dayvalue,hourvalue,tzinfo=tz)
 
         Embeds = discord.Embed(title="結果")
-        Embeds.add_field(name="入力",value=f"{self.formatting(timedate,self.tz_dict.get(self.value_timezone.value,'Asia/Tokyo'))}\nPT:{self.formatting(timedate,'PT')}\nGMT+0:{self.formatting(timedate,'GMT')}\nJST:{self.formatting(timedate,'JST')}",inline=False)
-# timedate.astimezone(tz_dict.get(timezonevalue,'Asia/Tokyo')
+        Embeds.add_field(name="入力",value=f"{self.formatting(timedate,self.tz_dict.get(self.value_timezone.value,'Asia/Tokyo'))}",inline=False)
+        Embeds.add_field(name="出力",value=f"{self.formatting(timedate,'PT')}\n{self.formatting(timedate,'GMT')}\n{self.formatting(timedate,'JST')}",inline=False)
         await interaction.response.send_message(embed=Embeds)
         # await interaction.response.send_message((f"あなたは{yearvalue}年{monthvalue}月{dayvalue}日{hourvalue}時と入力"))
 
