@@ -3,6 +3,8 @@ from discord import Embed, Role, SelectOption, User, ui
 from discord.ext import commands
 
 import datetime
+from dateutil.parser import parse
+import pytz
 
 from cogs.role import prevbutton
 
@@ -182,30 +184,55 @@ class timeinput(ui.Modal, title='ロール作成フォーム'):
         super().__init__()
         self.isOnly = isOnly
         self.e_page = e_page
-        self.v_page = v_page
-    
+        self.v_page = v_page    
+        
+
+    tz_dict = {'PT':'US/Pacific','GMT':'Etc/GMT+0','JST':'Asia/Tokyo','ET':'Etc/GMT-5','CEST':'Etc/GMT+2'}
     timeinfo = datetime.datetime.now()
     year = timeinfo.year
     month = timeinfo.month
     day = timeinfo.day
     hour = timeinfo.hour
+        
+    value_year = ui.TextInput(label="年",style=discord.TextStyle.short, custom_id="year",placeholder=f"年を入力。デフォルト({int(year)}年)", required=False)
+    value_month = ui.TextInput(label="月",style=discord.TextStyle.short, custom_id="month",placeholder=f"月を入力。デフォルト({int(month)}月)", required=False)
+    value_day = ui.TextInput(label="日",style=discord.TextStyle.short, custom_id="day",placeholder=f"日を入力。デフォルト({int(day)}日)", required=False)
+    value_hour = ui.TextInput(label="時間",style=discord.TextStyle.short, custom_id="hour",placeholder=f"時間を入力。デフォルト({int(hour)}時)", required=False)
+    value_timezone = ui.TextInput(label="タイムゾーン",style=discord.TextStyle.short, custom_id=f"timezone",placeholder="タイムゾーンを入力。デフォルト(JST)", required=False)
 
-    value_year = ui.TextInput(label="年",style=discord.TextStyle.short, custom_id="year",placeholder=f"年を入力。デフォルト({str(year)}年)", required=False)
-    value_month = ui.TextInput(label="月",style=discord.TextStyle.short, custom_id="month",placeholder=f"月を入力。デフォルト({str(month)}月)", required=False)
-    value_day = ui.TextInput(label="日",style=discord.TextStyle.short, custom_id="day",placeholder=f"日を入力。デフォルト({str(day)}日)", required=False)
-    value_hour = ui.TextInput(label="時間",style=discord.TextStyle.short, custom_id="hour",placeholder=f"時間を入力。デフォルト({str(hour)}時)", required=False)
-    value_timezone = ui.TextInput(label="タイムゾーン",style=discord.TextStyle.short, custom_id=f"timezone",placeholder="タイムゾーンを入力", required=False)
+    def formatting(self,obj,inputtz):
+        tz_ = pytz.timezone(self.tz_dict.get(inputtz,'Asia/Tokyo'))
+        time = obj.astimezone(tz_)
+        result = time.strftime('%Y年 %m月 %d日 %H時 (%Z)')
+        return result
 
     async def on_submit(self, interaction: discord.Interaction,):
         guild = interaction.guild
         author = interaction.user
-        yearvalue = self.value_year.value
-        monthvalue = self.value_month.value
-        dayvalue = self.value_day.value
-        hourvalue = self.value_hour.value
-        timezonevalue = self.value_timezone.value
+        count = 0
+        nowtimelist = [self.year,self.month,self.day,self.hour]
+        valuelist = [self.value_year.value,self.value_month.value,self.value_day.value,self.value_hour.value]
+        for _vl in valuelist:
+            try:
+                int(_vl,10)
+            except:
+                valuelist[count] = nowtimelist[count]
+            finally:
+                count +=1
 
-        await interaction.response.send_message((f"あなたは{timevalue}入力"))
+        tz_dict = {'PT':'US/Pacific','GMT':'Etc/GMT+0','JST':'Asia/Tokyo','ET':'Etc/GMT-5','CEST':'Etc/GMT+2'}
+        yearvalue = valuelist[0]
+        monthvalue = valuelist[1]
+        dayvalue = valuelist[2]
+        hourvalue = valuelist[3]
+        tz = pytz.timezone(self.tz_dict.get(self.value_timezone.value,'Asia/Tokyo'))
+        timedate = datetime.datetime(yearvalue,monthvalue,dayvalue,hourvalue,tzinfo=tz)
+
+        Embeds = discord.Embed(title="結果")
+        Embeds.add_field(name="入力",value=f"{self.formatting(timedate,self.tz_dict.get(self.value_timezone.value,'Asia/Tokyo'))}\nPT:{self.formatting(timedate,'PT')}\nGMT+0:{self.formatting(timedate,'GMT')}\nJST:{self.formatting(timedate,'JST')}",inline=False)
+# timedate.astimezone(tz_dict.get(timezonevalue,'Asia/Tokyo')
+        await interaction.response.send_message(embed=Embeds)
+        # await interaction.response.send_message((f"あなたは{yearvalue}年{monthvalue}月{dayvalue}日{hourvalue}時と入力"))
 
 
 

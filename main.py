@@ -61,8 +61,7 @@ async def menu(ctx,isOnly=None):
     author_name = author.display_name
     author_image = author.display_avatar.url
     # ------------------
-    embed = discord.Embed(title="メニュー",
-    color=int(randomcolor, base=16),description="メニューを選択できます。")
+    embed = discord.Embed(title="メニュー",color=int(randomcolor, base=16),description="メニューを選択できます。")
     e_page = []
     v_page = []
     embed.add_field(name="!role",value="ロールに関するメニュー",inline=True)
