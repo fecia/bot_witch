@@ -22,13 +22,14 @@ class miscmenu_page():
         self.isOnly =isOnly
         self.author_name = author.display_name
         self.author_image = author.display_avatar.url
-        
+
     def allpage(self):
         miscpage_list = [
             self.e_misc1,
             self.e_misc2,
         ]
         return miscpage_list
+
     def e_misc_menu(self,page:int) -> discord.Embed:
         emisclist = self.allpage()
 
