@@ -2,6 +2,8 @@ import discord
 from discord import Embed, Role, SelectOption, User, ui
 from discord.ext import commands
 
+import random
+
 from cogs.role import prevbutton
 
 class embedbox_game():
@@ -44,6 +46,24 @@ class embedbox_game():
         Embeds.add_field(name=(f' 参加者2'), value=(f' {player}'),inline=False)
         
         return Embeds
+
+class embedbox_hnb():
+    def __init__(self,author:discord.Member,p1:discord.Member = None,p2:discord.Member = None) -> None:
+        self.author =author
+        self.author_name = author.display_name
+        self.author_image = author.display_avatar.url
+        self.p1 = p1
+        self.p2 = p2
+        self.p1num:str = "***"
+        self.p2num:str = "***"
+
+    def e_hnb_battle(self,todo = "引数指定されてない") -> discord.Embed:
+        Embeds = discord.Embed(colour=self.author.colour,)
+        Embeds.add_field(name=(f'・先攻'), value=(f' {self.p1.mention}'),inline=False)
+        Embeds.add_field(name=(f'・後攻'), value=(f' {self.p2.mention}'),inline=False)
+
+        Embeds.add_field(name="しないといけないこと。",value=todo)
+        Embeds.set_footer(text=(f"{self.author_name}のロビー"),icon_url=self.author_image)
 
 class game_menu(commands.Cog):
     def __init__(self,bot) -> None:
@@ -162,20 +182,23 @@ class hnbplaybutton(discord.ui.Button):
             await interaction.response.edit_message(embed=Embeds,view=Views)
 
 class hnb_joinview(discord.ui.View):
-    def __init__(self, *, timeout = None,author :discord.Member = None,isOnly = None,e_page:list = [],v_page:list = [],isdm:bool =False):
+    def __init__(self, *, timeout = None,author :discord.Member = None,isOnly = None,e_page:list = [],v_page:list = [],isdm:bool =False,player:discord.Member = None):
         super().__init__(timeout=timeout)
         self.e_page = e_page
         self.v_page = v_page
         self.isOnly = isOnly
         self.author = author
+        self.player = player
         self.isdm = isdm
-
-        self.v_page.append(self)
+        if self.player is None:
+            self.v_page.append(self)
 
         if(len(self.e_page) > 1):
             self.add_item(prevbutton(self.e_page,self.v_page))
-
-        self.add_item(hnbjoinbutton(self.e_page,v_page=self.v_page,author=self.author))
+        if self.player is None:
+            self.add_item(hnbjoinbutton(e_page=self.e_page,v_page=self.v_page,author=self.author))
+        else:
+            self.add_item(hnbstartbutton(e_page=self.e_page,v_page=self.v_page,author=self.author,player=self.player))
 
 class hnbjoinbutton(discord.ui.Button):
     def __init__(self,e_page:list = [],v_page:list = [],custom_id="hnbjoinbutton",author:discord.Member =None):
@@ -189,7 +212,10 @@ class hnbjoinbutton(discord.ui.Button):
             await interaction.response.send_message(content=(f"すでに参加済みです。"),ephemeral=True)
             return
         else:
-            pass
+            evs = embedbox_game(author=self.author,isOnly=None,)
+            Embeds = evs.e_hnb_join(interaction.user)
+            Views = hnb_joinview(e_page=self.e_page,v_page=self.v_page,author=self.author,player=interaction.user) #ここのviewはv_pageに入れないように
+            await interaction.response.edit_message(embed = Embeds,view=Views)
 
 class hnbstatsbutton(discord.ui.Button):
     def __init__(self,e_page:list = [],v_page:list = []):
@@ -200,33 +226,58 @@ class hnbstatsbutton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         pass
 
-class hnb_number(ui.Modal, title='Hit&Blow - 数字決め'):
-    def __init__(self,isOnly,e_page:list = [],v_page:list = []) -> None:
-        super().__init__()
-        self.isOnly = isOnly
+class hnbstartbutton(discord.ui.Button):
+    def __init__(self,e_page:list = [],v_page:list = [],custom_id="hnbstartbutton",author:discord.Member =None,player:discord.Member = None):
+        super().__init__(label="開始",style=discord.ButtonStyle.blurple,custom_id=custom_id)
         self.e_page = e_page
         self.v_page = v_page
-        
+        self.author = author
+        self.player = player
+
+    async def callback(self, interaction: discord.Interaction):
+        if interaction.user.id == self.author.id:
+            x = 1 if random.random() >= 0.5 else 0
+            if x:
+                p1 = self.author
+                p2 = self.player
+            else:
+                p1 = self.player
+                p2 = self.author
+            evs = embedbox_hnb(author=self.author,p1=p1,p2=p2)
+            Embeds = evs.e_hnb_battle(todo="数字を決めてください。")
+            Views = hnbbattleview()
+            await interaction.response.send_modal(hnb_number())
+            return await interaction.response.edit_message(embed=Embeds,view=Views)
+        else:
+            await interaction.response.send_message("ホストのみが開始できます。",ephemeral=True)
+            return
+
+class hnb_number(ui.Modal, title='Hit&Blow - 数字決め'):
+    def __init__(self,p1:discord.Member = None,p2:discord.Member = None,p1num:int =None,p2num:int = None) -> None:
+        super().__init__()
+        self.p1 = p1
+        self.p2 = p2
+        self.p1num:int = p1num
+        self.p2num:int = p2num
+        self.gamenumber:int
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        try:
-            self.author_id = self.author.id
-        except AttributeError:
-            self.author_id = None
-        if self.author_id == None or self.author_id == interaction.user.id:
+        if interaction.user.id == self.p1.id or interaction.user.id == self.p2.id:
             return True
         else:
-            await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),ephemeral=True)
+            await interaction.response.send_message(content=(f"参加者のみ可能"),ephemeral=True)
             return False
-        
-    value_year = ui.TextInput(label="年",style=discord.TextStyle.short, custom_id="year",placeholder=f"年を入力。デフォルト(年)", required=False)
-    value_month = ui.TextInput(label="月",style=discord.TextStyle.short, custom_id="month",placeholder=f"月を入力。デフ月)", required=False)
-    value_day = ui.TextInput(label="日",style=discord.TextStyle.short, custom_id="day",placeholder=f"日を日)", required=False)
-    value_hour = ui.TextInput(label="時間",style=discord.TextStyle.short, custom_id="hour",placeholder=f"時間時)", required=False)
-    value_timezone = ui.TextInput(label="タイムゾーン",style=discord.TextStyle.short, custom_id=f"timezone",placeholder="タイムゾーンを入力。デフォルト(JST)", required=False)
+
+    value_num = ui.TextInput(label="数字",style=discord.TextStyle.short, custom_id=f"num",placeholder=f"数字を入力(無記入でランダムに決まります)", required=True,min_length=0,max_length=3)
 
     async def on_submit(self, interaction: discord.Interaction,):
-        pass
+        num = self.value_num.value
+        if num == None:
+            num = ''.join([random.choice('0123456789') for j in range(3)])
+            if interaction.id == self.p1.id:
+                self.p1num = num
+            else:
+                self.p2num = num
     
 
 
