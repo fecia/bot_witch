@@ -211,7 +211,6 @@ class timeinput(ui.Modal, title='ロール作成フォーム'):
             finally:
                 count +=1
 
-
         yearvalue = valuelist[0]
         monthvalue = valuelist[1]
         dayvalue = valuelist[2]
@@ -228,5 +227,5 @@ class timeinput(ui.Modal, title='ロール作成フォーム'):
 
 
 async def setup(bot):
-    print(f"miscellaneous読み込み")
     await bot.add_cog(miscellaneous_menu(bot))
+    print(f"miscellaneous読み込み")

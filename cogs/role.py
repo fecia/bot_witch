@@ -431,5 +431,5 @@ class roleselecter_json(discord.ui.Select):
         return
 
 async def setup(bot):
-    print(f"role読み込み")
     await bot.add_cog(role_menu(bot))
+    print(f"role読み込み")

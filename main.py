@@ -213,7 +213,10 @@ class registerconfirm(discord.ui.View):
             json_data ={
             "name": user.name,
             "id" : user.id,
-            "registerdate": result
+            "registerdate": result,
+            "battle":"0",
+            "win"   :"0",
+            "draw"  :"0"
             }
             path = "./bot_witch/users/" + str(user.id) + ".json"
             with open(path, "w") as file:
