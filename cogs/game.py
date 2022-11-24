@@ -64,7 +64,18 @@ class embedbox_hnb():
 
         Embeds.add_field(name="しないといけないこと。",value=todo)
         Embeds.set_footer(text=(f"{self.author_name}のロビー"),icon_url=self.author_image)
+        return Embeds
 
+    def e_turn(self,p1sturn=True) -> discord.Embed:
+        Embeds = discord.Embed(colour=self.author.colour,)
+        Embeds.add_field(name=(f'・先攻'), value=(f' {self.p1.mention}'),inline=False)
+        Embeds.add_field(name=(f'・後攻'), value=(f' {self.p2.mention}'),inline=False)
+        if p1sturn:
+            Embeds.add_field(name=f"あなたのターン。",value="数字を決めてください。")
+        else:
+            Embeds.add_field(name=f"相手のターン。",value="自分のターンが来るまでお待ち下さい。")
+        Embeds.set_footer(text=(f"{self.author_name}のロビー"),icon_url=self.author_image)
+        return Embeds
 class game_menu(commands.Cog):
     def __init__(self,bot) -> None:
         self.bot = bot
@@ -245,21 +256,25 @@ class hnbstartbutton(discord.ui.Button):
                 p2 = self.author
             evs = embedbox_hnb(author=self.author,p1=p1,p2=p2)
             Embeds = evs.e_hnb_battle(todo="数字を決めてください。")
-            Views = hnbbattleview()
-            await interaction.response.send_modal(hnb_number())
-            return await interaction.response.edit_message(embed=Embeds,view=Views)
+            Views = hnbbattleview() 
+            if p1.dm_channel is None: await p1.create_dm()
+            if p2.dm_channel is None: await p2.create_dm()
+            p1_dm = p1.dm_channel
+            p2_dm = p2.dm_channel
+            p1msg = await p1_dm.send(embed=Embeds,view=Views)
+            p2msg = await p2_dm.send(embed=Embeds,view=Views)
+            return
         else:
             await interaction.response.send_message("ホストのみが開始できます。",ephemeral=True)
             return
 
 class hnb_number(ui.Modal, title='Hit&Blow - 数字決め'):
-    def __init__(self,p1:discord.Member = None,p2:discord.Member = None,p1num:int =None,p2num:int = None) -> None:
+    def __init__(self,p1:discord.Member = None,p2:discord.Member = None,author:discord.Member = None) -> None:
         super().__init__()
         self.p1 = p1
         self.p2 = p2
-        self.p1num:int = p1num
-        self.p2num:int = p2num
-        self.gamenumber:int
+        self.author = author
+        self.gamenumber:int = self.custom_id
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
         if interaction.user.id == self.p1.id or interaction.user.id == self.p2.id:
@@ -268,18 +283,66 @@ class hnb_number(ui.Modal, title='Hit&Blow - 数字決め'):
             await interaction.response.send_message(content=(f"参加者のみ可能"),ephemeral=True)
             return False
 
-    value_num = ui.TextInput(label="数字",style=discord.TextStyle.short, custom_id=f"num",placeholder=f"数字を入力(無記入でランダムに決まります)", required=True,min_length=0,max_length=3)
+    defaultnum = ''.join([random.choice('0123456789') for j in range(3)])
+    value_num = ui.TextInput(label="数字",style=discord.TextStyle.short,placeholder=f"数字を入力(無記入で{defaultnum}に決まります)", required=True,min_length=0,max_length=3)
 
     async def on_submit(self, interaction: discord.Interaction,):
-        num = self.value_num.value
-        if num == None:
-            num = ''.join([random.choice('0123456789') for j in range(3)])
-            if interaction.id == self.p1.id:
-                self.p1num = num
-            else:
-                self.p2num = num
-    
+        path = "./bot_witch/hitandblow/" + str(self.gamenumber) + ".txt"
+        with open(path,"a+") as file:
+            number1 = file.readline()
+            number1.rstrip()
+            number2 = file.readline()
+            number2.rstrip()
+            print(number1 + "とととｔ"+number2)
+            if number1 is not None and number2 is not None:
+                evs = embedbox_hnb(author=self.author,p1=self.p1,p2=self.p2)
+                Embeds = evs.e_turn(True)
+                await 
 
+            num = self.value_num.value
+            if num == None:
+                num = self.defaultnum
+            if interaction.id == self.p1.id:
+                num
+            else:
+                num
+    
+class hnbbattleview(discord.ui.View):
+    def __init__(self,timeout = None,p1:discord.Member = None,p2:discord.Member = None,p1num:int =None,p2num:int = None) -> None:
+        super().__init__(timeout=timeout)
+        self.p1 = p1
+        self.p2 = p2
+        self.p1num:int = p1num
+        self.p2num:int = p2num
+        self.gamenumber:int
+        self.add_item(testbutton())
+
+class testbutton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(label="数字決定",style=discord.ButtonStyle.blurple,)
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.send_modale(hnb_number())
+
+class hitandblowgm():
+    def __init__(self,author:discord.Member=None,p1:discord.Member=None,p2:discord.Member=None,p1_num:str = None,p2_num:str = None):
+        self.author:discord.Member = author #ロビー設立者
+        self.p1:discord.Member = p1 #先手
+        self.p2:discord.Member = p2 #後手
+        self.p1_num:str = p1_num
+        self.p2_num:str = p2_num
+
+    def p1answer(self,p1_ans) -> bool:#案外つくらんくて良かったかも
+        if self.p1_num == p1_ans:
+            return True
+        else:
+            return False
+
+    def p2answer(self,p2_ans) -> bool:
+        if self.p2_num == p2_ans:
+            return True
+        else:
+            return False
 
 async def setup(bot):
     await bot.add_cog(game_menu(bot))
