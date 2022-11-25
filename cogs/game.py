@@ -256,7 +256,7 @@ class hnbstartbutton(discord.ui.Button):
                 p2 = self.author
             evs = embedbox_hnb(author=self.author,p1=p1,p2=p2)
             Embeds = evs.e_hnb_battle(todo="数字を決めてください。")
-            Views = hnbbattleview()
+            Views = hnbbattleview(p1=p1,p2=p2,author=self.author)
             if p1.dm_channel is None: await p1.create_dm()
             if p2.dm_channel is None: await p2.create_dm()
             p1_dm = p1.dm_channel
@@ -269,7 +269,7 @@ class hnbstartbutton(discord.ui.Button):
             return
 
 class hnb_number(ui.Modal, title='Hit&Blow - 数字決め'):
-    def __init__(self,p1:discord.Member = None,p2:discord.Member = None,p1num,author:discord.Member = None) -> None:
+    def __init__(self,p1:discord.Member = None,p2:discord.Member = None,p1num:int or str= None,p2num:int or str= None,author:discord.Member = None) -> None:
         super().__init__()
         self.p1 = p1
         self.p2 = p2
@@ -277,7 +277,7 @@ class hnb_number(ui.Modal, title='Hit&Blow - 数字決め'):
         self.gamenumber:int = self.custom_id
         self.p1num = p1num
         self.p2num = p2num
-        self.add_item(hnbmodal_textinput())
+        self.inputnum = self.add_item(hnbmodal_textinput(label="数字決め"))
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
         if interaction.user.id == self.p1.id or interaction.user.id == self.p2.id:
@@ -297,12 +297,18 @@ class hnb_number(ui.Modal, title='Hit&Blow - 数字決め'):
             number2 = file.readline()
             number2.rstrip()
             print(number1 + "とととｔ"+number2)
-            if number1 is not None and number2 is not None:
+            print(type(number1) + "とととｔ"+type(number2))
+            if number1 is not None and number2 is not None: #ファイル参照して番号両方ともあれば
                 evs = embedbox_hnb(author=self.author,p1=self.p1,p2=self.p2)
                 Embeds = evs.e_turn(True)
                 await self.p1.dm_channel.send(embed=Embeds)
                 await self.p2.dm_channel.send(embed=Embeds)
                 return
+            elif interaction.user.id == self.p1.id: #先攻プレイヤの番号が入力されたとき
+                file.write(self.inputnum.value +"\n")
+            else: #後攻プレイヤの番号が入力されたとき
+                pass
+
             num = self.value_num.value
             if num == None:
                 num = self.defaultnum
@@ -312,25 +318,31 @@ class hnb_number(ui.Modal, title='Hit&Blow - 数字決め'):
                 num
                 
 class hnbmodal_textinput(discord.ui.TextInput):
-    def __init__(self, *, label: str, style :discord.TextStyle = discord.TextStyle.short, defaultnum: Optional[str or int] = None, min_length: Optional[int] = None, max_length: Optional[int] = None) -> None:
+    def __init__(self, *, label: str, style :discord.TextStyle = discord.TextStyle.short, defaultnum = None, min_length = None, max_length = None) -> None:
         super().__init__(label=label, style = style, placeholder=f"数字を入力(無記入で{defaultnum}に決まります)", required=True, min_length = min_length, max_length=max_length)
     
 class hnbbattleview(discord.ui.View):
-    def __init__(self,timeout = None,p1:discord.Member = None,p2:discord.Member = None,p1num:int =None,p2num:int = None) -> None:
+    def __init__(self,timeout = None,p1:discord.Member = None,p2:discord.Member = None,author:discord.Member = None) -> None:
         super().__init__(timeout=timeout)
         self.p1 = p1
         self.p2 = p2
-        self.p1num:int = p1num
-        self.p2num:int = p2num
+        self.p1num:int = ''.join([random.choice('0123456789') for j in range(3)])
+        self.p2num:int = ''.join([random.choice('0123456789') for j in range(3)])
         self.gamenumber:int
-        self.add_item(testbutton())
+        self.author = author
+        self.add_item(testbutton(p1=self.p1,p2=self.p2,p1num=self.p1num,p2num=self.p2num,author=self.author))
 
 class testbutton(discord.ui.Button):
-    def __init__(self):
+    def __init__(self,p1:discord.Member = None,p2:discord.Member = None,p1num =None,p2num=None,author:discord.Member = None):
         super().__init__(label="数字決定",style=discord.ButtonStyle.blurple,)
+        self.p1 = p1
+        self.p2 = p2
+        self.p1num = p1num
+        self.p2num = p2num
+        self.author = author
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.send_modal(hnb_number())
+        await interaction.response.send_modal(hnb_number(p1=self.p1,p2=self.p2,p1num=self.p1num,p2num=self.p2num,author=self.author))
 
 class hitandblowgm():
     def __init__(self,author:discord.Member=None,p1:discord.Member=None,p2:discord.Member=None,p1_num:str = None,p2_num:str = None):
