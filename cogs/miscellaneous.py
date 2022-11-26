@@ -88,16 +88,11 @@ class miscmenu_view(discord.ui.View):
             self.add_item(timebutton(isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page))
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        try:
-            self.author_id = self.author.id
-        except AttributeError:
-            self.author_id = None
-        if self.author_id == None or self.author_id == interaction.user.id:
-            return True
-        else:
-            await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),
-                                            ephemeral=True)
-            return False
+        if self.isOnly == "1":
+            if self.author != interaction.user:
+                await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),ephemeral=True)
+                return False
+        return True
 
 
 class backpage(discord.ui.Button):
@@ -168,15 +163,11 @@ class timeinput(ui.Modal, title='ロール作成フォーム'):
         
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        try:
-            self.author_id = self.author.id
-        except AttributeError:
-            self.author_id = None
-        if self.author_id == None or self.author_id == interaction.user.id:
-            return True
-        else:
-            await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),ephemeral=True)
-            return False
+        if self.isOnly == "1":
+            if self.author != interaction.user:
+                await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),ephemeral=True)
+                return False
+        return True
 
     tz_dict = {'PT':'US/Pacific','GMT':'Etc/GMT+0','JST':'Asia/Tokyo','ET':'America/New_York','CEST':'Etc/GMT+2'}
     timeinfo = datetime.datetime.now()

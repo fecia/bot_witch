@@ -28,7 +28,7 @@ class judgeisOnly():#いらんくね
         if(self.isOnly == "1"):
             Views = button(author=self.author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page)
         else:
-            Views = button(isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page)
+            Views = button(author=self.author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page)
         return Views
 
 class embedbox():
@@ -40,9 +40,7 @@ class embedbox():
 
     def e_role_top(self) -> discord.Embed:
 
-        Embeds = discord.Embed(title="ロールメニュー",
-                            color=0xffffff,
-                            description="ここではロールに関する操作ができます。")
+        Embeds = discord.Embed(title="ロールメニュー",color=0xffffff,description="ここではロールに関する操作ができます。")
         Embeds.add_field(name=(f"・!list (一覧)"), value=(f"ロールの一覧を表示し付与することもできます"))
         Embeds.add_field(name=(f'・!make (追加)'), value=(f'フォーム形式でロールを作成できます'))
         if(self.isOnly == "1"):
@@ -68,30 +66,23 @@ class embedbox():
         else:
             Embeds.set_footer(text=(f"{self.author_name}が作成"),icon_url=self.author_image)
         return Embeds
-        # with open()
-
-
-    # ---------------------------------------------------------
-    def doTree(self,channel:discord.Thread,isTree:bool = False):
-        if(isTree):
-            pass
 
 # いったん凍結　（TypeError: 'RoleMenuButtons' object is not callable）発生-----------------------------------
-class unlockbutton(discord.ui.Button):
-    def __init__(self,e_page:list = [],v_page:list = []):
-        super().__init__(label='限定モード解除',style=discord.ButtonStyle.red)
-        self.e_page = e_page
-        self.v_page = v_page
+# class unlockbutton(discord.ui.Button):
+#     def __init__(self,e_page:list = [],v_page:list = []):
+#         super().__init__(label='限定モード解除',style=discord.ButtonStyle.red)
+#         self.e_page = e_page
+#         self.v_page = v_page
 
-    async def callback(self, interaction: discord.Interaction):
-        # await interaction.response.send_message(f'終了します', ephemeral=True)
-        # ここにページを見てisonly noneで返すの作る
-        judge = judgeisOnly(author=interaction.user,isOnly = None,e_page=self.e_page[-1],v_page=self.v_page)
-        self.e_page.append(judge.e_isOnly(self.e_page[-1]))
-        # self.v_page.append(judge.v_isOnly(self.v_page[-1]))
-        view = judge.v_isOnly(self.v_page[-1])
-        self.v_page.append(view)
-        await interaction.response.edit_message(embed=self.e_page[-1],view=self.v_page[-1])
+#     async def callback(self, interaction: discord.Interaction):
+#         # await interaction.response.send_message(f'終了します', ephemeral=True)
+#         # ここにページを見てisonly noneで返すの作る
+#         judge = judgeisOnly(author=self.author,isOnly = None,e_page=self.e_page[-1],v_page=self.v_page)
+#         self.e_page.append(judge.e_isOnly(self.e_page[-1]))
+#         # self.v_page.append(judge.v_isOnly(self.v_page[-1]))
+#         view = judge.v_isOnly(self.v_page[-1])
+#         self.v_page.append(view)
+#         await interaction.response.edit_message(embed=self.e_page[-1],view=self.v_page[-1])
 # --------------------------------------------------------------------------------------------------------------
 
 class prevbutton(discord.ui.Button):
@@ -200,7 +191,7 @@ class role_menu(commands.Cog):
         judge = judgeisOnly(author,isOnly,e_page,v_page)
         Embeds = evs.e_rolelist(guild)
         # views = judge.v_isOnly(roleview)
-        views = roleview_json(guild=guild,isOnly=isOnly,e_page=e_page,v_page=v_page)
+        views = roleview_json(guild=guild,isOnly=isOnly,e_page=e_page,v_page=v_page,author=author)
         await ctx.send(embed=Embeds,view=views)
 
 class RoleMenuButtons(discord.ui.View):
@@ -219,16 +210,11 @@ class RoleMenuButtons(discord.ui.View):
             self.add_item(prevbutton(self.e_page,self.v_page))
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        try:
-            self.author_id = self.author.id
-        except AttributeError:
-            self.author_id = None
-        if self.author_id == None or self.author_id == interaction.user.id:
-            return True
-        else:
-            await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),
-                                            ephemeral=True)
-            return False
+        if self.isOnly == "1":
+            if self.author != interaction.user:
+                await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),ephemeral=True)
+                return False
+        return True
 # 第一ボタン
     @discord.ui.button(
     label=(f'!list'),
@@ -237,12 +223,12 @@ class RoleMenuButtons(discord.ui.View):
     async def list(self, interaction: discord.Interaction,button: discord.ui.Button):
         guild = interaction.guild
         path = "./bot_witch/guilds/" + str(guild.id) + ".json"
-        evs = embedbox(author=interaction.user,isOnly=self.isOnly)
-        judge = judgeisOnly(interaction.user,self.isOnly,self.e_page,self.v_page)
+        evs = embedbox(author=self.author,isOnly=self.isOnly)
+        judge = judgeisOnly(self.author,self.isOnly,self.e_page,self.v_page)
         Embeds = evs.e_rolelist(interaction.guild)
         self.e_page.append(Embeds)
         # views = judge.v_isOnly(roleview)
-        views = roleview_json(guild=interaction.guild,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page)
+        views = roleview_json(guild=interaction.guild,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page,author=self.author)
         await interaction.response.edit_message(embed=Embeds,view=views)
 
 # 第二ボタン
@@ -260,16 +246,8 @@ class Role_question(ui.Modal, title='ロール作成フォーム'):
         self.e_page = e_page
         self.v_page = v_page
 
-    value_name = ui.TextInput(label=(f'名前'),
-                            custom_id="name",
-                            placeholder=(f"名前を入力してください。"),
-                            required=True)
-    value_color = ui.TextInput(label=(f'色'),
-                            custom_id="color",
-                            placeholder=(f"色を#をつけ入力してください(16進数)例:#a1b3f0"),
-                            required=True,
-                            max_length=7,
-                            min_length=7)
+    value_name = ui.TextInput(label=(f'名前'),custom_id="name",placeholder=(f"名前を入力してください。"),required=True)
+    value_color = ui.TextInput(label=(f'色'),custom_id="color",placeholder=(f"色を#をつけ入力してください(16進数)例:#a1b3f0"),required=True,max_length=7,min_length=7)
 
     async def on_submit(self, interaction: discord.Interaction,):
         guild = interaction.guild
@@ -295,7 +273,7 @@ class Role_question(ui.Modal, title='ロール作成フォーム'):
         self.e_page.append(Embeds)
         # Embeds = judge.e_isOnly(Embeds)
         views = RoleAttach(author=author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page,role=newrole)
-        await interaction.response.edit_message(embed=Embeds,view=views) 
+        await interaction.response.edit_message(embed=Embeds,view=views)
 
 class RoleAttach(discord.ui.View):
     def __init__(self, *, timeout = None,author:discord.Member = None,isOnly,e_page:list = [],v_page:list = [],role:discord.Role):
@@ -313,16 +291,11 @@ class RoleAttach(discord.ui.View):
             self.add_item(prevbutton(self.e_page,self.v_page))
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        try:
-            self.author_id = self.author.id
-        except AttributeError:
-            self.author_id = None
-        if self.author_id == None or self.author_id == interaction.user.id:
-            return True
-        else:
-            await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),
-                                            ephemeral=True)
-            return False
+        if self.isOnly == "1":
+            if self.author != interaction.user:
+                await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),ephemeral=True)
+                return False
+        return True
 
     @discord.ui.button(
         label='はい',
@@ -357,20 +330,21 @@ class roleselecter(discord.ui.RoleSelect):
         super().__init__()
 
 class roleview_json(discord.ui.View):
-    def __init__(self, *,guild,e_page:list = [],isOnly,v_page:list = [],timeout=None):
+    def __init__(self, *,guild,e_page:list = [],isOnly,v_page:list = [],timeout=None,author:discord.Member):
         super().__init__(timeout=timeout)
         self.v_page = v_page
         self.e_page = e_page
         self.v_page.append(self)
-        self.add_item(roleselecter_json(guild=guild,isOnly=isOnly))
+        self.add_item(roleselecter_json(guild=guild,isOnly=isOnly,author=author))
         if(len(self.e_page) != 0):
             self.add_item(prevbutton(self.e_page,self.v_page))
 
 class roleselecter_json(discord.ui.Select):
-    def __init__(self,*,guild,customid="roleselecter_json",isOnly,timeout=None) -> None:
+    def __init__(self,*,guild,customid="roleselecter_json",isOnly,timeout=None,author = None) -> None:
         super().__init__()
         self.isOnly = isOnly
         options = []
+        self.author = author
         self.guild : discord.Guild = guild
         path = "./bot_witch/guilds/" + str(self.guild.id) + ".json"
         rolecount = 0
@@ -401,16 +375,11 @@ class roleselecter_json(discord.ui.Select):
             super().__init__(options=options,placeholder=(f"ロール総数:{rolecount},エラー件数:{errorcount}"))
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        try:
-            self.author_id = self.author.id
-        except AttributeError:
-            self.author_id = None
-        if self.author_id == None or self.author_id == interaction.user.id:
-            return True
-        else:
-            await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),
-                                            ephemeral=True)
-            return False
+        if self.isOnly == "1":
+            if self.author != interaction.user:
+                await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),ephemeral=True)
+                return False
+        return True
 
     async def callback(self, interaction: discord.Interaction):
         user = interaction.user
