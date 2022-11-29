@@ -240,5 +240,12 @@ class registerconfirm(discord.ui.View):
         embed = discord.Embed(color=0xff0000,description="中止しました")
         await interaction.response.edit_message(embed=embed,view=None)
 
-
+@bot.command()
+async def test(ctx):
+    path = "./bot_witch/hitandblow/test.txt"
+    with open(path,"r+") as file:
+        alllines = file.readlines()
+        print(alllines)
+        alllines.append("追加分")
+        print(alllines)
 bot.run(Token)

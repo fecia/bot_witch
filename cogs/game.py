@@ -2,6 +2,7 @@ import discord
 from discord import Embed, Role, SelectOption, User, ui
 from discord.ext import commands
 
+import os
 import random
 
 from cogs.role import prevbutton
@@ -10,17 +11,15 @@ class embedbox_game():
     def __init__(self,author:discord.Member,isOnly) -> None:
         self.author =author
         self.isOnly =isOnly
-        self.author_name = author.display_name
-        self.author_image = author.display_avatar.url
     
     def e_game_top(self) -> discord.Embed:
         Embeds = discord.Embed(title="ゲームメニュー",color=0xffffff,description="ここではゲームに関する操作ができます。")
         Embeds.add_field(name=(f"・!hnb (ヒット&ブロー)"), value=(f"ヒット&ブロー"))
         Embeds.add_field(name=(f'・なし'), value=(f'なしなしなしなしなし'))
         if(self.isOnly == "1"):
-            Embeds.set_footer(text=(f"{self.author_name}のみ操作可能"),icon_url=self.author_image)
+            Embeds.set_footer(text=(f"{self.author.display_name}のみ操作可能"),icon_url=self.author.display_avatar.url)
         else:
-            Embeds.set_footer(text=(f"{self.author_name}が作成"),icon_url=self.author_image)
+            Embeds.set_footer(text=(f"{self.author.display_name}が作成"),icon_url=self.author.display_avatar.url)
         return Embeds
 
     def e_hnb_top(self,startname,startdescription) -> discord.Embed:
@@ -29,9 +28,9 @@ class embedbox_game():
         Embeds.add_field(name=(f'・戦績'), value=(f'戦績を表示します。'))
 
         if(self.isOnly == "1"):
-            Embeds.set_footer(text=(f"{self.author_name}のみ操作可能"),icon_url=self.author_image)
+            Embeds.set_footer(text=(f"{self.author.display_name}のみ操作可能"),icon_url=self.author.display_avatar.url)
         else:
-            Embeds.set_footer(text=(f"{self.author_name}が作成"),icon_url=self.author_image)
+            Embeds.set_footer(text=(f"{self.author.display_name}が作成"),icon_url=self.author.display_avatar.url)
         return Embeds
 
     def e_hnb_join(self,player:discord.Member = None) -> discord.Embed:
@@ -41,40 +40,56 @@ class embedbox_game():
             player = player.mention
 
         Embeds = discord.Embed(colour=self.author.colour,)
-        Embeds.set_author(icon_url=self.author_image,name=f"{self.author_name}のロビー")
+        Embeds.set_author(icon_url=self.author.display_avatar.url,name=f"{self.author.display_name}のロビー")
         Embeds.add_field(name=(f' 参加者1'), value=(f' {self.author.mention}'),inline=False)
         Embeds.add_field(name=(f' 参加者2'), value=(f' {player}'),inline=False)
         
+        return Embeds
+    def error(self) -> discord.Embed:
+        Embeds = discord.Embed(colour=discord.Colour.red())
+        Embeds.add_field(name="エラー",value="もう一度部屋を作り直してください。")
         return Embeds
 
 class embedbox_hnb():
     def __init__(self,author:discord.Member,p1:discord.Member = None,p2:discord.Member = None) -> None:
         self.author =author
-        self.author_name = author.display_name
-        self.author_image = author.display_avatar.url
         self.p1 = p1
         self.p2 = p2
-        self.p1num:str = "***"
-        self.p2num:str = "***"
 
     def e_hnb_battle(self,todo = "引数指定されてない") -> discord.Embed:
         Embeds = discord.Embed(colour=self.author.colour,)
-        Embeds.add_field(name=(f'・先攻'), value=(f' {self.p1.mention}'),inline=False)
-        Embeds.add_field(name=(f'・後攻'), value=(f' {self.p2.mention}'),inline=False)
+        Embeds.add_field(name=(f'・先攻'), value=(f' {self.p1.mention}'),inline=True)
+        Embeds.add_field(name=(f'・後攻'), value=(f' {self.p2.mention}'),inline=True)
 
-        Embeds.add_field(name="しないといけないこと。",value=todo)
-        Embeds.set_footer(text=(f"{self.author_name}のロビー"),icon_url=self.author_image)
+        Embeds.add_field(name="--------------------",value=todo,inline=False)
+        Embeds.set_footer(text=(f"{self.author.display_name}のロビー"),icon_url=self.author.display_avatar.url)
         return Embeds
 
     def e_turn(self,p1sturn=True) -> discord.Embed:
         Embeds = discord.Embed(colour=self.author.colour,)
-        Embeds.add_field(name=(f'・先攻'), value=(f' {self.p1.mention}'),inline=False)
-        Embeds.add_field(name=(f'・後攻'), value=(f' {self.p2.mention}'),inline=False)
+        Embeds.add_field(name=(f'・先攻'), value=(f' {self.p1.mention}'),inline=True)
+        Embeds.add_field(name=(f'・後攻'), value=(f' {self.p2.mention}'),inline=True)
         if p1sturn:
-            Embeds.add_field(name=f"あなたのターン。",value="数字を決めてください。")
+            Embeds.add_field(name=f"{self.p1.display_name}のターン。",value="数字を決めてください。",inline=False)
         else:
-            Embeds.add_field(name=f"相手のターン。",value="自分のターンが来るまでお待ち下さい。")
-        Embeds.set_footer(text=(f"{self.author_name}のロビー"),icon_url=self.author_image)
+            Embeds.add_field(name=f"{self.p2.mention}のターン。",value="数字を決めてください。",inline=False)
+        Embeds.set_footer(text=(f"{self.author.display_name}のロビー"),icon_url=self.author.display_avatar.url)
+        return Embeds
+
+    def e_hnb_progress(self,p1sturn:bool,gamedate) -> discord.Embed:
+        Embeds = discord.Embed(colour=self.author.colour,)
+        Embeds.set_author(icon_url=self.author.display_avatar.url,name=f"{self.author.display_name}のロビー")
+        Embeds.add_field(name=(f'・先攻'), value=(f' {self.p1.mention}'),inline=True)
+        Embeds.add_field(name=(f'・後攻'), value=(f' {self.p2.mention}'),inline=True)
+        Embeds.add_field(name='--------------------------------',value="ログ",inline=False)
+        Embeds.add_field(name=(f'先攻'), value=(f' {gamedate[7][0]}'),inline=True)
+        Embeds.add_field(name=(f'後攻'), value=(f' {gamedate[7][1]}'),inline=True)
+        if p1sturn:
+            Embeds.add_field(name=f"--------------------\n{self.p1.display_name}のターン。",value="数字を決めてください。",inline=False)
+        else:
+            Embeds.add_field(name=f"--------------------\n{self.p2.mention}のターン。",value="数字を決めてください。",inline=False)
+        
+        
         return Embeds
 class game_menu(commands.Cog):
     def __init__(self,bot) -> None:
@@ -237,6 +252,9 @@ class hnbstartbutton(discord.ui.Button):
         self.gameid = self.custom_id
 
     async def callback(self, interaction: discord.Interaction):
+        path = "./bot_witch/hitandblow/" + str(self.gameid) + ".txt"
+        with open(path,"w"):
+            pass
         if interaction.user.id == self.author.id:
             x = 1 if random.random() >= 0.5 else 0
             if x:
@@ -248,12 +266,13 @@ class hnbstartbutton(discord.ui.Button):
             evs = embedbox_hnb(author=self.author,p1=p1,p2=p2)
             Embeds = evs.e_hnb_battle(todo="数字を決めてください。")
             Views = hnbbattleview(p1=p1,p2=p2,author=self.author,gameid = self.gameid)
-            if p1.dm_channel is None: await p1.create_dm()
-            if p2.dm_channel is None: await p2.create_dm()
-            p1_dm = p1.dm_channel
-            p2_dm = p2.dm_channel
-            p1msg = await p1_dm.send(embed=Embeds,view=Views)
-            p2msg = await p2_dm.send(embed=Embeds,view=Views)
+            # if p1.dm_channel is None: await p1.create_dm()
+            # if p2.dm_channel is None: await p2.create_dm()
+            # p1_dm = p1.dm_channel
+            # p2_dm = p2.dm_channel
+            # p1msg = await p1_dm.send(embed=Embeds,view=Views)
+            # p2msg = await p2_dm.send(embed=Embeds,view=Views)
+            await interaction.response.edit_message(embed=Embeds,view=Views)
             return
         else:
             await interaction.response.send_message("ホストのみが開始できます。",ephemeral=True)
@@ -274,29 +293,41 @@ class hnb_numberforp1(ui.Modal, title='Hit&Blow - 数字決め'):
 
     async def on_submit(self, interaction: discord.Interaction,):
         path = "./bot_witch/hitandblow/" + str(self.gameid) + ".txt"
-        with open(path,"a+") as file:
+        if not os.path.isfile(path=path):
+            evs =embedbox_game(None,None)
+            return await interaction.response.edit_message(embed=evs.error(),view=None)
+        with open(path,"r+") as file:
+            allline = file.readlines()
             if self.inputnum.value == None:
-                file.write(self.defaultnum +"\n")
+                allline.insert(0,self.defaultnum)
             else:
-                file.write(self.inputnum.value +"\n")
+                allline.insert(0,self.inputnum.value)
 
-            file.seek(0)
-            number1 = str(file.readline())
-            # number1.rstrip()
-            number2 = str(file.readline())
-            # number2.rstrip()
-            print(str(number1)+ "とととｔ"+str(number2))
-            print(str(type(number1)) + "とととｔ"+str(type(number2)))
-            print(bool(len(number1) == 0 and len(number2) == 0))
-
-            if len(number1) != 0 and len(number2) != 0: #ファイル参照して番号両方ともあれば
+            p1_num = allline[0]
+            print(allline)
+            if len(allline) == 2:
+                p2_num = allline[1]
+                file.truncate(0)
+                file.write(allline[0]+"\n"+allline[1])
                 evs = embedbox_hnb(author=self.author,p1=self.p1,p2=self.p2)
                 Embeds = evs.e_turn(True)
-                await self.p1.dm_channel.send(embed=Embeds)
-                await self.p2.dm_channel.send(embed=Embeds)
-                return
-            
-
+                # await self.p1.dm_channel.send(embed=Embeds)
+                # await self.p2.dm_channel.send(embed=Embeds)
+                turncount:int = 0
+                p1log:str ="考え中"
+                p2log:str =""
+                log = [p1log,p2log]
+                gamedate=[self.gameid,self.p1,p1_num,self.p2,p2_num,self.author,turncount,log]
+                Views = yournumberview(gamedate,isp1turn=True)
+                await interaction.response.edit_message(embed=Embeds,view=Views)
+            else:
+                file.write(allline[0])
+                x = discord.Colour.gold() if random.uniform(0,100) <= 1 else discord.Colour.blue()
+                Embeds = discord.Embed(colour=x)
+                Embeds.add_field(name="受付完了",value="相手の入力が終わるまでお待ち下さい。")
+                Embeds.set_footer(text="このメッセージは5秒後に自動的に削除されます。")
+                await interaction.response.send_message(embed=Embeds,ephemeral=True,delete_after=5)
+            return
 
 class hnb_numberforp2(ui.Modal, title='Hit&Blow - 数字決め'):
     def __init__(self,p1:discord.Member = None,p2:discord.Member = None,author:discord.Member = None,gameid = None) -> None:
@@ -304,8 +335,6 @@ class hnb_numberforp2(ui.Modal, title='Hit&Blow - 数字決め'):
         self.p1 = p1
         self.p2 = p2
         self.author = author
-        self.p1num = None
-        self.p2num = None
         self.gameid = gameid
 
     defaultnum = ''.join([random.choice('0123456789') for j in range(3)])
@@ -313,119 +342,40 @@ class hnb_numberforp2(ui.Modal, title='Hit&Blow - 数字決め'):
 
     async def on_submit(self, interaction: discord.Interaction,):
         path = "./bot_witch/hitandblow/" + str(self.gameid) + ".txt"
-        with open(path,"a+") as file:
+        if not os.path.isfile(path=path):
+            evs =embedbox_game(None,None)
+            return await interaction.response.edit_message(embed=evs.error(),view=None)
+        with open(path,"r+") as file:
+            allline = file.readlines()
             if self.inputnum.value == None:
-                file.write(self.defaultnum +"\n")
+                allline.append(self.defaultnum)
             else:
-                file.write(self.inputnum.value +"\n")
+                allline.append(self.inputnum.value)
 
-            file.seek(0)
-            number1 = str(file.readline())
-            # number1.rstrip()
-            number2 = str(file.readline())
-            # number2.rstrip()
-            print(str(number1)+ "とととｔ"+str(number2))
-            print(str(type(number1)) + "とととｔ"+str(type(number2)))
-            print(bool(len(number1) == 0 and len(number2) == 0))
-
-            if len(number1) != 0 and len(number2) != 0: #ファイル参照して番号両方ともあれば
+            p1_num = allline[0]
+            print(allline)
+            if len(allline) == 2:
+                p2_num = allline[1]
+                file.write("\n"+allline[1])
                 evs = embedbox_hnb(author=self.author,p1=self.p1,p2=self.p2)
                 Embeds = evs.e_turn(True)
-                await self.p1.dm_channel.send(embed=Embeds)
-                await self.p2.dm_channel.send(embed=Embeds)
-                return
-            
-
-    
-class hnb_number(ui.Modal, title='Hit&Blow - 数字決め'):
-    def __init__(self,p1:discord.Member = None,p2:discord.Member = None,p1num:int or str= None,p2num:int or str= None,author:discord.Member = None) -> None:
-        super().__init__()
-        self.p1 = p1
-        self.p2 = p2
-        self.author = author
-        self.gamenumber:int = self.custom_id
-        self.p1num = p1num
-        self.p2num = p2num
-
-        inputnum = self.add_item(hnbmodal_textinput())
-        self.aho = inputnum.value
-    async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        if interaction.user.id == self.p1.id or interaction.user.id == self.p2.id:
-            return True
-        else:
-            await interaction.response.send_message(content=(f"参加者のみ可能"),ephemeral=True)
-            return False
-
-    # value_num = ui.TextInput(label="数字",style=discord.TextStyle.short,placeholder=f"数字を入力(無記入でに決まります)", required=True)
-
-    async def on_submit(self, interaction: discord.Interaction,):
-        path = "./bot_witch/hitandblow/" + str(self.gamenumber) + ".txt"
-        with open(path,"a+") as file:
-            number1 = str(file.readline())
-            number1.rstrip()
-            number2 = str(file.readline())
-            number2.rstrip()
-            print(str(number1)+ "とととｔ"+str(number2))
-            print(str(type(number1)) + "とととｔ"+str(type(number2)))
-            if self.inputnum.value == None:
-                if interaction.user.id == self.p1.id: #先攻プレイヤの番号が入力されたとき
-
-                    file.write(self.inputnum.value +"\n")
-                else: #後攻プレイヤの番号が入力されたとき
-                    file.write("\n"+self.inputnum.value +"\n")
-
-            if len(number1) == 0 and len(number2) == 0: #ファイル参照して番号両方ともあれば
-                evs = embedbox_hnb(author=self.author,p1=self.p1,p2=self.p2)
-                Embeds = evs.e_turn(True)
-                await self.p1.dm_channel.send(embed=Embeds)
-                await self.p2.dm_channel.send(embed=Embeds)
-                return
-            elif interaction.user.id == self.p1.id: #先攻プレイヤの番号が入力されたとき
-                file.write(self.inputnum.value +"\n")
-            else: #後攻プレイヤの番号が入力されたとき
-                file.write("\n"+self.inputnum.value +"\n")
-
-
-class hnbmodal_textinput(discord.ui.TextInput):
-    def __init__(self, *, label: str,defaultnum = None, min_length = None, max_length = None,
-        p1:discord.Member = None,p2:discord.Member = None,p1num:int or str= None,p2num:int or str= None,author:discord.Member = None,) -> None:
-
-        super().__init__(label=label, style = discord.TextStyle.short, placeholder=f"数字を入力(無記入で{defaultnum}に決まります)", required=True, min_length = min_length, max_length=max_length)
-        self.p1 = p1
-        self.p2 = p2
-        self.author = author
-        self.gamenumber:int = self.custom_id
-        self.p1num = p1num
-        self.p2num = p2num
-
-    # async def callback(self, interaction: discord.Interaction,):
-    #     path = "./bot_witch/hitandblow/" + str(self.gamenumber) + ".txt"
-    #     with open(path,"a+") as file:
-    #         number1 = str(file.readline())
-    #         number1.rstrip()
-    #         number2 = str(file.readline())
-    #         number2.rstrip()
-    #         print(f"{interaction.user.name}が{self.value}を入力しました")
-    #         print(str(number1)+ "とととｔ"+str(number2))
-    #         print(str(type(number1)) + "とととｔ"+str(type(number2)))
-    #         if self.value == None:
-    #             if interaction.user.id == self.p1.id: #先攻プレイヤの番号が入力されたとき
-    #                 num = self.p1num
-    #                 file.write(num +"\n")
-    #             else: #後攻プレイヤの番号が入力されたとき
-    #                 num = self.p2num
-    #                 file.write("\n"+num +"\n")
-
-    #         if len(number1) != 0 and len(number2) != 0: #ファイル参照して番号両方ともあれば
-    #             evs = embedbox_hnb(author=self.author,p1=self.p1,p2=self.p2)
-    #             Embeds = evs.e_turn(True)
-    #             await self.p1.dm_channel.send(embed=Embeds)
-    #             await self.p2.dm_channel.send(embed=Embeds)
-    #             return
-    #         elif interaction.user.id == self.p1.id: #先攻プレイヤの番号が入力されたとき
-    #             file.write(self.value +"\n")
-    #         else: #後攻プレイヤの番号が入力されたとき
-    #             file.write("\n"+self.value +"\n")
+                # await self.p1.dm_channel.send(embed=Embeds)
+                # await self.p2.dm_channel.send(embed=Embeds)
+                turncount:int = 0
+                p1log:str ="考え中"
+                p2log:str =""
+                log = [p1log,p2log]
+                gamedate=[self.gameid,self.p1,p1_num,self.p2,p2_num,self.author,turncount,log]
+                Views = yournumberview(gamedate,isp1turn=True)
+                await interaction.response.edit_message(embed=Embeds,view=Views)
+            else:
+                file.write(allline[0])
+                x = discord.Colour.gold() if random.uniform(0,100) <= 1 else discord.Colour.blue()
+                Embeds = discord.Embed(colour=x)
+                Embeds.add_field(name="受付完了",value="相手の入力が終わるまでお待ち下さい。")
+                Embeds.set_footer(text="このメッセージは5秒後に自動的に削除されます。")
+                await interaction.response.send_message(embed=Embeds,ephemeral=True,delete_after=5)
+            return
 
 class hnbbattleview(discord.ui.View):
     def __init__(self,timeout = None,p1:discord.Member = None,p2:discord.Member = None,author:discord.Member = None,gameid =None) -> None:
@@ -435,11 +385,18 @@ class hnbbattleview(discord.ui.View):
         self.gamenumber:int
         self.author = author
 
-        self.add_item(testbutton(p1=self.p1,p2=self.p2,author=self.author,gameid=gameid))
+        self.add_item(mynumberbutton(p1=self.p1,p2=self.p2,author=self.author,gameid=gameid))
 
-class testbutton(discord.ui.Button):
+    async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
+        user = interaction.user
+        if user == self.p1 or user == self.p2:
+            return True
+        await interaction.response.send_message("参加者のみ可能。",ephemeral=True)
+        return False
+
+class mynumberbutton(discord.ui.Button):
     def __init__(self,p1:discord.Member = None,p2:discord.Member = None,author:discord.Member = None,gameid =None):
-        super().__init__(label="数字決定",style=discord.ButtonStyle.blurple,)
+        super().__init__(label="自分の数字を決める",style=discord.ButtonStyle.blurple,)
         self.p1 = p1
         self.p2 = p2
         self.author = author
@@ -451,25 +408,114 @@ class testbutton(discord.ui.Button):
         else: #後攻プレイヤ
             await interaction.response.send_modal(hnb_numberforp2(p1=self.p1,p2=self.p2,author=self.author,gameid = self.gameid))
 
-class hitandblowgm():
-    def __init__(self,author:discord.Member=None,p1:discord.Member=None,p2:discord.Member=None,p1_num:str = None,p2_num:str = None):
-        self.author:discord.Member = author #ロビー設立者
-        self.p1:discord.Member = p1 #先手
-        self.p2:discord.Member = p2 #後手
-        self.p1_num:str = p1_num
-        self.p2_num:str = p2_num
+class yournumberview(discord.ui.View):
+    def __init__(self,gamedate:list,isp1turn:bool = True):
+        super().__init__(timeout=None)
+        # gamedate = [gameid,p1,p1_num,p2,p2_num,author,turncount,log] #ゲームid,先攻、先攻番号、後攻、後攻番号、ロビー設立者,ターン数=先１:後１：先２：後２と続いていく
+        
+        self.add_item(yournumberbutton(gamedate=gamedate,isp1turn=isp1turn))
 
-    def p1answer(self,p1_ans) -> bool:#案外つくらんくて良かったかも
-        if self.p1_num == p1_ans:
-            return True
-        else:
-            return False
+class yournumberbutton(discord.ui.Button):
+    def __init__(self,gamedate:list,isp1turn:bool = True):
+        super().__init__(label="数字決定",style=discord.ButtonStyle.blurple,)
+        self.gamedate = gamedate
+        self.isp1turn = isp1turn
 
-    def p2answer(self,p2_ans) -> bool:
-        if self.p2_num == p2_ans:
-            return True
+    async def callback(self, interaction: discord.Interaction):
+        if interaction.user == self.gamedate[1] or interaction.user == self.gamedate[3]: #inで見ないほうがいいのかわからん ~~.user in self.~~
+            if self.isp1turn and interaction.user == self.gamedate[1] or not self.isp1turn and interaction.user == self.gamedate[3]:
+                return await interaction.response.send_modal(yournumbermodal(gamedate=self.gamedate,isp1turn=self.isp1turn))
+            else:
+                await interaction.response.send_message("相手のターンです。",ephemeral=True)
         else:
-            return False
+            await interaction.response.send_message("参加者のみ可能です。")
+        return
+
+class yournumbermodal(ui.Modal, title='Hit&Blow - 数字あて'):
+    def __init__(self,gamedate:list,isp1turn:bool) -> None:
+        super().__init__()
+        self.gamedate = gamedate
+        self.isp1turn = isp1turn
+
+    inputnum = ui.TextInput(label="数字",style=discord.TextStyle.short,placeholder=f"数字を入力してください", required=True)
+
+    async def on_submit(self, interaction: discord.Interaction,):
+        number = self.inputnum.value
+        gm = gmhitandblow(gamedate=self.gamedate,isp1turn=self.isp1turn)
+
+        self.isp1turn = False if self.isp1turn else True #p1turn　ヒックリかえし
+        self.gamedate[6] +1 if self.isp1turn else 0
+        if gm.iscorrect(number):#正解処理 p1なら引き分け勝負に入る
+            if self.isp1turn: #上でisp1turn 入れ替えてて逆やから注意 True =p2が答えた処理,False = p1が答えたときの処理
+                self.gamedate[7][1] += f"**{number}** -- 4H0B\n"
+                #勝ち入る
+                print("p2勝ち")
+                await interaction.response.edit_message(content="p2勝ち")
+            else:
+                self.gamedate[7][0] += f"**{number}** -- 4H0B\n"
+                #引き分け勝負入る
+                print("p1引き分け勝負入る")
+                await interaction.response.edit_message(content="p1引き分け勝負入る")
+        else:
+            hit,blow = gm.hitblow(number)
+            if self.isp1turn: #上でisp1turn 入れ替えてて逆やから注意 True =p2が答えた処理,False = p1が答えたときの処理
+                self.gamedate[7][1] = self.gamedate[7][1].replace("考え中",f"{number} -- {hit}H{blow}B\n")
+                self.gamedate[7][0] += f"考え中"
+            else:
+                self.gamedate[7][0] = self.gamedate[7][0].replace("考え中",f"{number} -- {hit}H{blow}B\n")
+                self.gamedate[7][1] += f"考え中"
+            evs = embedbox_hnb(author=self.gamedate[5],p1=self.gamedate[1],p2=self.gamedate[3])
+            Embeds = evs.e_hnb_progress(p1sturn=self.isp1turn,gamedate=self.gamedate)
+            Views = yournumberview(gamedate=self.gamedate,isp1turn=self.isp1turn)
+            await interaction.response.edit_message(embed=Embeds,view=Views)
+
+
+
+class gmhitandblow():
+    def __init__(self,gamedate:list,isp1turn:bool):
+        self.gamedate = gamedate #gameid,p1,p1num,p2,p2num,author
+        self.isp1turn = isp1turn
+
+    def iscorrect(self,num):
+        if self.isp1turn:
+            if num == self.gamedate[4]:
+                return True
+        else:
+            if num == self.gamedate[2]:
+                return True
+        return False
+
+    def hitblow(self,num):
+        truenum :str = self.gamedate[4] if self.isp1turn else self.gamedate[2] 
+        hit :int = 0
+        blow:int = 0
+        for x in range(0,len(truenum)):
+            if truenum[x] == num[x]:
+                hit += 1
+                continue
+            if num[x] in truenum:
+                blow +=1
+                continue
+        return hit,blow
+
+        # truenum = self.gamedate[4] if self.isp1turn else self.gamedate[2] #ルール勘違いしてて作ったやつ桁数多いやつとかに使えそうやから残しておく（隣り合ってないとblowにならない)
+        # hit :int = 0
+        # blow:int = 0
+        # for x in range(0,len(truenum)):
+        #     if truenum[x] == num[x]:
+        #         hit += 1
+        #         continue
+        #     if not x == (0 or len(truenum) - 1):
+        #         if truenum[x-1] == num[x] or truenum[x+1] == num[x]:
+        #             blow  #あんまりきれいじゃないとおもう+=1
+        #     elif x == 0:
+        #         if truenum[x+1] == num[x]:
+        #             blow +=1
+        #     else:
+        #         if truenum[x-1] == num[x]:
+        #             blow +=1
+        #     continue
+        # return hit,blow
 
 async def setup(bot):
     await bot.add_cog(game_menu(bot))
