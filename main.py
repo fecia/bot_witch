@@ -242,10 +242,30 @@ class registerconfirm(discord.ui.View):
 
 @bot.command()
 async def test(ctx):
-    path = "./bot_witch/hitandblow/test.txt"
-    with open(path,"r+") as file:
-        alllines = file.readlines()
-        print(alllines)
-        alllines.append("追加分")
-        print(alllines)
+    Embeds = discord.Embed(title="0",description="0")
+    Views = testview()
+    await ctx.send(embed=Embeds,view=Views)
+
+
+class testview(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        self.add_item(testbutton())
+
+class testbutton(discord.ui.Button):
+    def __init__(self):
+        super().__init__(label="test",style=discord.ButtonStyle.blurple)
+        self.count = 0
+    
+    async def callback(self, interaction: discord.Interaction):
+        self.count+=1
+        Embeds = discord.Embed(title=f"今{self.count}",description=f"今{self.count}")
+        Embeds.add_field(name="test",value="v")
+        elist = [Embeds]
+        await interaction.response.edit_message(embed=elist[0])
+
+    
+        
+        
+
 bot.run(Token)
