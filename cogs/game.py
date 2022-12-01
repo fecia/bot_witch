@@ -105,10 +105,13 @@ class embedbox_hnb():
         return Embeds
 
     def e_hnb_winresult(self,gamedate,) -> discord.Embed:
-        Embeds = discord.Embed(color=gamedate[5][0].accent_color,title=f"勝利:{gamedate[8][0].display_name}",description=f"敗北:{gamedate[8][1].display_name}")
+        Embeds = discord.Embed(colour=self.author.colour,title=f"勝利:{gamedate[8][0].display_name}",description=f"敗北:{gamedate[8][1].display_name}")
         Embeds.add_field(name=(f'・先攻'), value=(f' {gamedate[1].mention}\n番号:{gamedate[2]}'),inline=True)
         Embeds.add_field(name=(f'・後攻'), value=(f' {gamedate[3].mention}\n番号:{gamedate[4]}'),inline=True)
         Embeds.add_field(name=(f'{gamedate[6]}ターン目で{gamedate[8][0].display_name}が的中。'), value=(f"--------------------"),inline=False)
+        Embeds.add_field(name='--------------------------------',value="ログ",inline=False)
+        Embeds.add_field(name=(f'先攻'), value=(f' {gamedate[7][0]}'),inline=True)
+        Embeds.add_field(name=(f'後攻'), value=(f' {gamedate[7][1]}'),inline=True)
         Embeds.set_footer(text=(f"ゲームID:{gamedate[0]}"),icon_url=gamedate[5][0].display_avatar.url)
         return Embeds
 
@@ -116,10 +119,10 @@ class embedbox_hnb():
         Embeds = discord.Embed(color=gamedate[5][0].accent_color,title=f"引き分け")
         Embeds.add_field(name=(f'・先攻'), value=(f' {gamedate[1].mention}\n番号:{gamedate[2]}'),inline=True)
         Embeds.add_field(name=(f'・後攻'), value=(f' {gamedate[3].mention}\n番号:{gamedate[4]}'),inline=True)
+        Embeds.add_field(name=(f'{gamedate[6]}ターン目で両者的中。'), value=(f"--------------------"),inline=False)
         Embeds.add_field(name='--------------------------------',value="ログ",inline=False)
         Embeds.add_field(name=(f'先攻'), value=(f' {gamedate[7][0]}'),inline=True)
         Embeds.add_field(name=(f'後攻'), value=(f' {gamedate[7][1]}'),inline=True)
-        Embeds.add_field(name=(f'{gamedate[6]}ターン目で両者的中。'), value=(f"--------------------"),inline=False)
         Embeds.set_footer(text=(f"ゲームID:{gamedate[0]}"),icon_url=gamedate[5][0].display_avatar.url)
         return Embeds
 
@@ -172,7 +175,7 @@ class gotohnbbutton(discord.ui.Button):
         self.author = author
 
     async def callback(self, interaction: discord.Interaction):
-        evs = embedbox_game(author=interaction.user,isOnly=self.isOnly)
+        evs = embedbox_game(author=self.author,isOnly=self.isOnly)
         if interaction.guild:
             Embeds = evs.e_hnb_top("ルーム作成","ルームを作成し対戦相手を募集します。")
             Views = hitnblow_top(author=self.author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page)
@@ -325,20 +328,28 @@ class hnb_numberforp1(ui.Modal, title='Hit&Blow - 数字決め'):
         self.gameid = gameid
         self.playerlist = playerlist
 
-    defaultnum = ''.join([random.choice('0123456789') for j in range(3)])
-    inputnum = ui.TextInput(label="数字",style=discord.TextStyle.short,placeholder=f"数字を入力(無記入で{defaultnum}に決まります)", required=True)
+    inputnum = ui.TextInput(label="数字",style=discord.TextStyle.short,placeholder=f"数字を入力(無記入でランダムに決まります)", required=True,min_length=0)
 
     async def on_submit(self, interaction: discord.Interaction,):
         path = "./bot_witch/hitandblow/" + str(self.gameid) + ".txt"
         if not os.path.isfile(path=path):
             evs =embedbox_game(None,None)
             return await interaction.response.edit_message(embed=evs.error(),view=None)
+        for y in range(0,10):
+            if self.inputnum.value.count(str(y)) >=2:
+                return await interaction.response.send_message(content="同じ文字が2回以上使われています。もう一度決め直してください。",ephemeral=True)
         with open(path,"r+") as file:
             allline = file.readlines()
-            if self.inputnum.value == None:
-                allline.insert(0,self.defaultnum)
+            await interaction.user.create_dm()
+            if self.inputnum.value == "r":
+                numlist = ["0","1","2","3","4","5","6","7","8","9"]
+                defaultnum = ''.join(random.sample(numlist,3))
+                allline.insert(0,defaultnum)
+                await interaction.user.dm_channel.send(content=f"あなたの番号は{defaultnum}に決まりました。")
             else:
                 allline.insert(0,self.inputnum.value)
+                await interaction.user.create_dm()
+                await interaction.user.dm_channel.send(content=f"{self.inputnum.value}で受け付けました。")
 
             p1_num = allline[0]
             print(allline)
@@ -375,20 +386,27 @@ class hnb_numberforp2(ui.Modal, title='Hit&Blow - 数字決め'):
         self.gameid = gameid
         self.playerlist = playerlist
 
-    defaultnum = ''.join([random.choice('0123456789') for j in range(3)])
-    inputnum = ui.TextInput(label="数字",style=discord.TextStyle.short,placeholder=f"数字を入力(無記入で{defaultnum}に決まります)", required=True)
+    inputnum = ui.TextInput(label="数字(例)",style=discord.TextStyle.short,placeholder=f"数字(0~9)を重複無しで入力(無記入でランダムに決まります)", required=True,min_length=0)
 
     async def on_submit(self, interaction: discord.Interaction,):
         path = "./bot_witch/hitandblow/" + str(self.gameid) + ".txt"
         if not os.path.isfile(path=path):
             evs =embedbox_game(None,None)
             return await interaction.response.edit_message(embed=evs.error(),view=None)
+        for y in range(0,10):
+            if self.inputnum.value.count(str(y)) >=2:
+                return await interaction.response.send_message(content="同じ文字が2回以上使われています。もう一度決め直してください。",ephemeral=True)
         with open(path,"r+") as file:
             allline = file.readlines()
-            if self.inputnum.value == None:
-                allline.append(self.defaultnum)
+            await interaction.user.create_dm()
+            if self.inputnum.value == "r":
+                numlist = ["0","1","2","3","4","5","6","7","8","9"]
+                defaultnum = ''.join(random.sample(numlist,3))
+                allline.append(defaultnum)
+                await interaction.user.dm_channel.send(content=f"あなたの番号は{defaultnum}に決まりました。")
             else:
                 allline.append(self.inputnum.value)
+                await interaction.user.dm_channel.send(content=f"{self.inputnum.value}で受け付けました。")
 
             p1_num = allline[0]
             print(allline)
@@ -397,7 +415,6 @@ class hnb_numberforp2(ui.Modal, title='Hit&Blow - 数字決め'):
                 file.write("\n"+allline[1])
                 evs = embedbox_hnb(author=self.author,p1=self.p1,p2=self.p2)
                 # await self.p1.dm_channel.send(embed=Embeds)
-                # await self.p2.dm_channel.send(embed=Embeds)
                 turncount:int = 1
                 p1log:str ="考え中"
                 p2log:str =""
@@ -468,7 +485,7 @@ class yournumberbutton(discord.ui.Button):
             else:
                 await interaction.response.send_message("相手のターンです。",ephemeral=True)
         else:
-            await interaction.response.send_message("参加者のみ可能です。")
+            await interaction.response.send_message("参加者のみ可能です。",ephemeral=True)
         return
 
 class yournumbermodal(ui.Modal, title='Hit&Blow - 数字あて'):

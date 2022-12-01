@@ -4,7 +4,7 @@ from tokenize import Token
 import discord
 from discord import Embed, Role, SelectOption, User, ui
 from discord.ext import commands
-from discord.utils import get
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -58,7 +58,7 @@ async def reload_cogs(msg):
 @bot.command()
 async def menu(ctx,isOnly=None):
     await ctx.message.delete(delay=1)
-    # 変数作成
+    # 変数作成のみ操作可能
     randomcolor = str("0x"+''.join([random.choice('0123456789ABCDEF') for j in range(6)]))
     author :discord.Member = ctx.author
     author_name = author.display_name
