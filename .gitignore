@@ -115,6 +115,7 @@ users
 hitandblow
 Dockerfile
 requirements.txt
+memopy
 
 # Spyder project settings
 .spyderproject
