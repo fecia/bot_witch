@@ -13,6 +13,7 @@ import datetime
 from zoneinfo import ZoneInfo
 import json
 import random
+from PIL import Image, ImageFilter
 
 from cogs.role import *
 from cogs.miscellaneous import miscmenu_view, miscmenu_page
@@ -264,8 +265,12 @@ class testbutton(discord.ui.Button):
         elist = [Embeds]
         await interaction.response.edit_message(embed=elist[0])
 
-    
-        
-        
-
+@bot.command()
+async def test2(ctx):
+    # newimg = Image.new("RGB",(300,150),(255,0,0))
+    # dirimg = Image.open("./bot_witch/test.png","RGB")
+    file = discord.File("./bot_witch/test.png",filename="image.png")
+    Embeds = discord.Embed(title="test")
+    Embeds.set_image(url="attachment://image.png")
+    await ctx.send(file=file,embed=Embeds)
 bot.run(Token)
