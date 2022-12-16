@@ -99,7 +99,7 @@ async def menu(ctx,isonly=None):
     if isonly =="1":
         embed.set_footer(text=(f"{author_name}のみ操作可能"),icon_url=author_image)
         e_page.append(embed)
-        views = menu_button(author=author,isOnly=isonly,e_page=e_page,v_page=v_page)
+        views = menu_button(author=author,isonly=isonly,e_page=e_page,v_page=v_page)
     else:
         embed.set_footer(text=(f"{author_name}が作成"),icon_url=author_image)
         e_page.append(embed)
@@ -109,16 +109,16 @@ async def menu(ctx,isonly=None):
     await ctx.send(embed=e_page[-1],view=v_page[-1])
 
 class menu_button(discord.ui.View):
-    def __init__(self, *, timeout = None,author:discord.Member = None,isOnly = None,e_page:list,v_page:list):
+    def __init__(self, *, timeout = None,author:discord.Member = None,isonly = None,e_page:list,v_page:list):
         super().__init__(timeout=timeout)
         self.author = author
-        self.isOnly = isOnly
+        self.isonly = isonly
         self.e_page = e_page
         self.v_page = v_page
         v_page.append(self)
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        if self.isOnly == "1":
+        if self.isonly == "1":
             if self.author != interaction.user:
                 await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),ephemeral=True)
                 return False
@@ -130,11 +130,11 @@ class menu_button(discord.ui.View):
     )
 
     async def gotorole(self, interaction: discord.Interaction,button: discord.ui.Button):
-        evs = embedbox(author=self.author,isOnly = self.isOnly)
+        evs = embedbox(author=self.author,isonly = self.isonly)
         Embeds = evs.e_role_top()
         self.e_page.append(Embeds)
-        judge = judgeisOnly(author=self.author,isOnly = self.isOnly,e_page=self.e_page,v_page=self.v_page)
-        Views = judge.v_isOnly(button=RoleMenuButtons)
+        judge = judgeisonly(author=self.author,isonly = self.isonly,e_page=self.e_page,v_page=self.v_page)
+        Views = judge.v_isonly(button=RoleMenuButtons)
         await interaction.response.edit_message(embed=Embeds,view=Views,)
 
     @discord.ui.button(
@@ -143,12 +143,12 @@ class menu_button(discord.ui.View):
     )
 
     async def gotomisc(self, interaction: discord.Interaction,button: discord.ui.Button):
-        miscpage = miscmenu_page(self.author,self.isOnly)
+        miscpage = miscmenu_page(self.author,self.isonly)
         Embeds = miscpage.e_misc_menu(0)
         pagedict = miscpage.allpage()
         self.e_page.append(Embeds)
         allpage = len(pagedict)
-        Views = miscmenu_view(author=self.author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page,allpage=allpage)
+        Views = miscmenu_view(author=self.author,isonly=self.isonly,e_page=self.e_page,v_page=self.v_page,allpage=allpage)
         await interaction.response.edit_message(embed=Embeds,view = Views)
 
     @discord.ui.button(
@@ -157,10 +157,10 @@ class menu_button(discord.ui.View):
     )
 
     async def gotogame(self,interaction: discord.Interaction,button: discord.ui.Button):
-        evs = embedbox_game(author=self.author,isOnly=self.isOnly)
+        evs = embedbox_game(author=self.author,isonly=self.isonly)
         Embeds = evs.e_game_top()
         self.e_page.append(Embeds)
-        Views = gamemenuview(isOnly=self.isOnly,author=self.author,e_page=self.e_page,v_page=self.v_page)
+        Views = gamemenuview(isonly=self.isonly,author=self.author,e_page=self.e_page,v_page=self.v_page)
         await interaction.response.edit_message(embed=Embeds,view=Views)
 
     @discord.ui.button(

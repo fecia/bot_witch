@@ -8,18 +8,18 @@ from zoneinfo import ZoneInfo
 from cogs.role import prevbutton
 
 class embedbox_misc():
-    def __init__(self,author:discord.Member,isOnly) -> None:
+    def __init__(self,author:discord.Member,isonly) -> None:
         self.author =author
-        self.isOnly =isOnly
+        self.isonly =isonly
         self.author_name = author.display_name
         self.author_image = author.display_avatar.url
 
 
 
 class miscmenu_page():
-    def __init__(self,author:discord.Member,isOnly) -> None:
+    def __init__(self,author:discord.Member,isonly) -> None:
         self.author =author
-        self.isOnly =isOnly
+        self.isonly =isonly
         self.author_name = author.display_name
         self.author_image = author.display_avatar.url
 
@@ -34,7 +34,7 @@ class miscmenu_page():
         emisclist = self.allpage()
 
         Embeds = emisclist[page]()
-        if(self.isOnly == "1"):
+        if(self.isonly == "1"):
             Embeds.set_footer(text=(f"{self.author_name}のみ操作可能"),icon_url=self.author_image)
         else:
             Embeds.set_footer(text=(f"{self.author_name}が作成"),icon_url=self.author_image)
@@ -59,18 +59,18 @@ class miscellaneous_menu(commands.Cog):
     def __init__(self,bot) -> None:
         self.bot = bot
 
-    def misc_top(self,channel:discord.Thread,author:discord.Member,*,isOnly = None,e_page:list = [],v_page:list = []):
-        miscpage = miscmenu_page(author,isOnly)
+    def misc_top(self,channel:discord.Thread,author:discord.Member,*,isonly = None,e_page:list = [],v_page:list = []):
+        miscpage = miscmenu_page(author,isonly)
         Embeds = miscpage.e_misc_menu(0)
         pagedict = miscpage.allpage()
         allpage = len(pagedict)
-        Views = miscmenu_view(author=author,isOnly=isOnly,e_page=e_page,v_page=v_page,allpage=allpage)
+        Views = miscmenu_view(author=author,isonly=isonly,e_page=e_page,v_page=v_page,allpage=allpage)
 
 class miscmenu_view(discord.ui.View):
-    def __init__(self, *, timeout = None,author:int = None,isOnly,e_page:list = [],v_page:list = [],allpage,currentpage = 0):
+    def __init__(self, *, timeout = None,author:int = None,isonly,e_page:list = [],v_page:list = [],allpage,currentpage = 0):
         super().__init__(timeout=timeout)
         self.author = author
-        self.isOnly = isOnly
+        self.isonly = isonly
         self.e_page = e_page
         self.v_page = v_page
         self.allpage = allpage
@@ -81,14 +81,14 @@ class miscmenu_view(discord.ui.View):
 
         if(len(self.e_page) != 0):
             self.add_item(prevbutton(self.e_page,self.v_page))
-        self.add_item(backpage(currentpage=self.currentpage,allpage=self.allpage,author=self.author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page))
+        self.add_item(backpage(currentpage=self.currentpage,allpage=self.allpage,author=self.author,isonly=self.isonly,e_page=self.e_page,v_page=self.v_page))
         self.add_item(nowpage(currentpage=self.currentpage,allpage=self.allpage))
-        self.add_item(nextpage(currentpage=self.currentpage,allpage=self.allpage,author=self.author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page))
+        self.add_item(nextpage(currentpage=self.currentpage,allpage=self.allpage,author=self.author,isonly=self.isonly,e_page=self.e_page,v_page=self.v_page))
         if self.currentpage == 0:
-            self.add_item(timebutton(isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page))
+            self.add_item(timebutton(isonly=self.isonly,e_page=self.e_page,v_page=self.v_page))
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        if self.isOnly == "1":
+        if self.isonly == "1":
             if self.author != interaction.user:
                 await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),ephemeral=True)
                 return False
@@ -96,11 +96,11 @@ class miscmenu_view(discord.ui.View):
 
 
 class backpage(discord.ui.Button):
-    def __init__(self,currentpage,allpage,author,isOnly,e_page,v_page):
-        self.miscmenu = miscmenu_page(author,isOnly)
+    def __init__(self,currentpage,allpage,author,isonly,e_page,v_page):
+        self.miscmenu = miscmenu_page(author,isonly)
         self.currentpage = currentpage
         self.allpage = allpage
-        self.isOnly = isOnly
+        self.isonly = isonly
         self.e_page = e_page
         self.v_page = v_page
 
@@ -113,7 +113,7 @@ class backpage(discord.ui.Button):
         self.currentpage -= 1
         Embeds = self.miscmenu.e_misc_menu(self.currentpage)
         author = interaction.user
-        Views = miscmenu_view(author=author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page,currentpage=self.currentpage,allpage=self.allpage)
+        Views = miscmenu_view(author=author,isonly=self.isonly,e_page=self.e_page,v_page=self.v_page,currentpage=self.currentpage,allpage=self.allpage)
         await interaction.response.edit_message(embed=Embeds,view=Views)
 
 class nowpage(discord.ui.Button):
@@ -123,11 +123,11 @@ class nowpage(discord.ui.Button):
         super().__init__(style=discord.ButtonStyle.gray,label=(f"{self.currentpage+1}/{self.allpage}"),disabled=True)
 
 class nextpage(discord.ui.Button):
-    def __init__(self,currentpage,allpage,author,isOnly,e_page,v_page):
-        self.miscmenu = miscmenu_page(author,isOnly)
+    def __init__(self,currentpage,allpage,author,isonly,e_page,v_page):
+        self.miscmenu = miscmenu_page(author,isonly)
         self.currentpage = currentpage
         self.allpage = allpage
-        self.isOnly = isOnly
+        self.isonly = isonly
         self.e_page = e_page
         self.v_page = v_page
 
@@ -140,30 +140,30 @@ class nextpage(discord.ui.Button):
         self.currentpage += 1
         Embeds = self.miscmenu.e_misc_menu(self.currentpage)
         author = interaction.user
-        Views = miscmenu_view(author=author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page,currentpage=self.currentpage,allpage=self.allpage)
+        Views = miscmenu_view(author=author,isonly=self.isonly,e_page=self.e_page,v_page=self.v_page,currentpage=self.currentpage,allpage=self.allpage)
         await interaction.response.edit_message(embed=Embeds,view=Views)
 
 class timebutton(discord.ui.Button):
-    def __init__(self,isOnly,e_page,v_page):
-        self.isOnly = isOnly
+    def __init__(self,isonly,e_page,v_page):
+        self.isonly = isonly
         self.e_page = e_page
         self.v_page = v_page
 
         super().__init__(style=discord.ButtonStyle.blurple,label="!time",row=1)
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.send_modal(timeinput(isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page))
+        await interaction.response.send_modal(timeinput(isonly=self.isonly,e_page=self.e_page,v_page=self.v_page))
 
 class timeinput(ui.Modal, title='ロール作成フォーム'):
-    def __init__(self,isOnly,e_page:list = [],v_page:list = []) -> None:
+    def __init__(self,isonly,e_page:list = [],v_page:list = []) -> None:
         super().__init__()
-        self.isOnly = isOnly
+        self.isonly = isonly
         self.e_page = e_page
         self.v_page = v_page    
         
 
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        if self.isOnly == "1":
+        if self.isonly == "1":
             if self.author != interaction.user:
                 await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),ephemeral=True)
                 return False

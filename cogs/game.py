@@ -13,15 +13,15 @@ import io
 from cogs.role import prevbutton
 
 class embedbox_game():
-    def __init__(self,author:discord.Member,isOnly) -> None:
+    def __init__(self,author:discord.Member,isonly) -> None:
         self.author =author
-        self.isOnly =isOnly
+        self.isonly =isonly
     
     def e_game_top(self) -> discord.Embed:
         Embeds = discord.Embed(title="ゲームメニュー",color=0xffffff,description="ここではゲームに関する操作ができます。")
         Embeds.add_field(name=(f"・!hnb (Hit&Blow)"), value=(f"Hit&Blow"))
         Embeds.add_field(name=(f'・なし'), value=(f'なしなしなしなしなし'))
-        if(self.isOnly == "1"):
+        if(self.isonly == "1"):
             Embeds.set_footer(text=(f"{self.author.display_name}のみ操作可能"),icon_url=self.author.display_avatar.url)
         else:
             Embeds.set_footer(text=(f"{self.author.display_name}が作成"),icon_url=self.author.display_avatar.url)
@@ -34,7 +34,7 @@ class embedbox_game():
 
         if not isdm:
             Embeds.add_field(name="・カスタムルーム", value="ルールを変更しルーム作成できます")
-        if(self.isOnly == "1"):
+        if(self.isonly == "1"):
             Embeds.set_footer(text=(f"{self.author.display_name}のみ操作可能"),icon_url=self.author.display_avatar.url)
         else:
             Embeds.set_footer(text=(f"{self.author.display_name}が作成"),icon_url=self.author.display_avatar.url)
@@ -243,21 +243,21 @@ class game_menu(commands.Cog):
         author = ctx.author
         e_page =[]
         v_page =[]
-        await self.game_top(channel=ctx,author=author,isOnly=isonly,e_page=e_page,v_page=v_page)
+        await self.game_top(channel=ctx,author=author,isonly=isonly,e_page=e_page,v_page=v_page)
 
-    async def game_top(self,channel:discord.Thread,author:discord.Member,*,isOnly = None,e_page:list = [],v_page:list = []):
-        evs = embedbox_game(author,isOnly)
+    async def game_top(self,channel:discord.Thread,author:discord.Member,*,isonly = None,e_page:list = [],v_page:list = []):
+        evs = embedbox_game(author,isonly)
         Embeds = evs.e_game_top()
         e_page.append(Embeds)
-        Views = gamemenuview(isOnly=isOnly,author=author,e_page=e_page,v_page=v_page)
+        Views = gamemenuview(isonly=isonly,author=author,e_page=e_page,v_page=v_page)
         await channel.send(embed=Embeds,view=Views)
 
 class gamemenuview(discord.ui.View):
-    def __init__(self, *, timeout = None,author :discord.Member = None,isOnly = None,e_page:list = [],v_page:list = []):
+    def __init__(self, *, timeout = None,author :discord.Member = None,isonly = None,e_page:list = [],v_page:list = []):
         super().__init__(timeout=timeout)
         self.e_page = e_page
         self.v_page = v_page
-        self.isOnly = isOnly
+        self.isonly = isonly
         self.author = author
 
         self.v_page.append(self)
@@ -265,42 +265,42 @@ class gamemenuview(discord.ui.View):
         if(len(self.e_page) > 1):
             self.add_item(prevbutton(self.e_page,self.v_page))
 
-        self.add_item(gotohnbbutton(self.author,self.e_page,self.v_page,isOnly=self.isOnly))
+        self.add_item(gotohnbbutton(self.author,self.e_page,self.v_page,isonly=self.isonly))
     
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        if self.isOnly == "1":
+        if self.isonly == "1":
             if self.author != interaction.user:
                 await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),ephemeral=True)
                 return False
         return True
 
 class gotohnbbutton(discord.ui.Button):
-    def __init__(self,author :discord.Member = None,e_page:list = [],v_page:list = [],labelname:str='!hnb',isOnly = None,):
+    def __init__(self,author :discord.Member = None,e_page:list = [],v_page:list = [],labelname:str='!hnb',isonly = None,):
         super().__init__(label=labelname,style=discord.ButtonStyle.blurple)
         self.e_page = e_page
         self.v_page = v_page
-        self.isOnly = isOnly
+        self.isonly = isonly
         self.author = author
 
     async def callback(self, interaction: discord.Interaction):
-        evs = embedbox_game(author=self.author,isOnly=self.isOnly)
+        evs = embedbox_game(author=self.author,isonly=self.isonly)
         if interaction.guild:
             Embeds = evs.e_hnb_top("・ルーム作成","ルームを作成し対戦相手を募集します。",isdm=False)
-            Views = hitnblow_top(author=self.author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page)
+            Views = hitnblow_top(author=self.author,isonly=self.isonly,e_page=self.e_page,v_page=self.v_page)
             self.e_page.append(Embeds)
             return await interaction.response.edit_message(embed=Embeds,view=Views)
         else:
             Embeds = evs.e_hnb_top("・マッチング開始","マッチングを開始し対戦相手を待ちます。",isdm=True)
-            Views = hitnblow_top(author=self.author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page)
+            Views = hitnblow_top(author=self.author,isonly=self.isonly,e_page=self.e_page,v_page=self.v_page)
             self.e_page.append(Embeds)
             return await interaction.response.edit_message(embed=Embeds,view=Views)
 
 class hitnblow_top(discord.ui.View):
-    def __init__(self, *, timeout = None,author :discord.Member = None,isOnly = None,e_page:list = [],v_page:list = [],isdm:bool =False):
+    def __init__(self, *, timeout = None,author :discord.Member = None,isonly = None,e_page:list = [],v_page:list = [],isdm:bool =False):
         super().__init__(timeout=timeout)
         self.e_page = e_page
         self.v_page = v_page
-        self.isOnly = isOnly
+        self.isonly = isonly
         self.author = author
         self.isdm = isdm
 
@@ -309,40 +309,40 @@ class hitnblow_top(discord.ui.View):
         if(len(self.e_page) > 1):
             self.add_item(prevbutton(self.e_page,self.v_page))
         if self.isdm == True:
-            self.add_item(hnbplaybutton(author=self.author,e_page=self.e_page,v_page=self.v_page,labelname="マッチング開始",isdm = True,isOnly=self.isOnly))
+            self.add_item(hnbplaybutton(author=self.author,e_page=self.e_page,v_page=self.v_page,labelname="マッチング開始",isdm = True,isonly=self.isonly))
         else:
-            self.add_item(hnbplaybutton(author=self.author,e_page=self.e_page,v_page=self.v_page,isOnly=self.isOnly))
-            self.add_item(hnbcustombutton(author=self.author,e_page=self.e_page,v_page=self.v_page,isOnly=self.isOnly))
+            self.add_item(hnbplaybutton(author=self.author,e_page=self.e_page,v_page=self.v_page,isonly=self.isonly))
+            self.add_item(hnbcustombutton(author=self.author,e_page=self.e_page,v_page=self.v_page,isonly=self.isonly))
         self.add_item(hnbstatsbutton(self.e_page,self.v_page))
     
     async def interaction_check(self, interaction: discord.Interaction, /) -> bool:
-        if self.isOnly == "1":
+        if self.isonly == "1":
             if self.author != interaction.user:
                 await interaction.response.send_message(content=(f"専用モードのため{self.author.mention}のみ操作できます"),ephemeral=True)
                 return False
         return True
 
 class hnbplaybutton(discord.ui.Button):
-    def __init__(self,author :discord.Member = None,e_page:list = [],v_page:list = [],labelname:str='ルーム作成',isdm:bool =False,isOnly = None):
+    def __init__(self,author :discord.Member = None,e_page:list = [],v_page:list = [],labelname:str='ルーム作成',isdm:bool =False,isonly = None):
         super().__init__(label=labelname,style=discord.ButtonStyle.blurple)
         self.e_page = e_page
         self.v_page = v_page
         self.isdm = isdm
-        self.isOnly = isOnly
+        self.isonly = isonly
         self.author = author
 
     async def callback(self, interaction: discord.Interaction):
         if self.isdm:
             pass #ｄｍ内の処理
         else:
-            evs = embedbox_game(interaction.user,isOnly=self.isOnly)
+            evs = embedbox_game(interaction.user,isonly=self.isonly)
             Embeds = evs.e_hnb_join()
             self.e_page.append(Embeds)
-            Views = hnb_joinview(author=self.author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page)
+            Views = hnb_joinview(author=self.author,isonly=self.isonly,e_page=self.e_page,v_page=self.v_page)
             await interaction.response.edit_message(embed=Embeds,view=Views)
 
 class hnb_joinview(discord.ui.View):
-    def __init__(self,author :discord.Member = None,isOnly = None,e_page:list = [],v_page:list = [],isdm:bool =False,
+    def __init__(self,author :discord.Member = None,isonly = None,e_page:list = [],v_page:list = [],isdm:bool =False,
                 player:discord.Member = None,digit:int = 3,options:list = []):
         super().__init__(timeout=None)
         if player is None:
@@ -356,24 +356,24 @@ class hnb_joinview(discord.ui.View):
             self.add_item(hnbstartbutton(e_page=e_page,v_page=v_page,author=author,player=player,digit=digit,options=options))
 
 class hnbcustombutton(discord.ui.Button):
-    def __init__(self,author :discord.Member = None,e_page:list = [],v_page:list = [],isdm:bool =False,isOnly = None):
+    def __init__(self,author :discord.Member = None,e_page:list = [],v_page:list = [],isdm:bool =False,isonly = None):
         super().__init__(label="カスタムルーム作成",style=discord.ButtonStyle.blurple)
         self.e_page = e_page
         self.v_page = v_page
         self.isdm = isdm
-        self.isOnly = isOnly
+        self.isonly = isonly
         self.author = author
 
     async def callback(self, interaction: discord.Interaction):
-        return await interaction.response.send_modal(hnb_settings(author=self.author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page))
+        return await interaction.response.send_modal(hnb_settings(author=self.author,isonly=self.isonly,e_page=self.e_page,v_page=self.v_page))
 
 class hnb_settings(ui.Modal, title='Hit&Blow - ゲーム設定'):
-    def __init__(self,author :discord.Member = None,isOnly = None,e_page:list = [],v_page:list = [],isdm:bool =False) -> None:
+    def __init__(self,author :discord.Member = None,isonly = None,e_page:list = [],v_page:list = [],isdm:bool =False) -> None:
         super().__init__(timeout=None)
         self.e_page = e_page
         self.v_page = v_page
         self.isdm = isdm
-        self.isOnly = isOnly
+        self.isonly = isonly
         self.author = author
 
     digit = ui.TextInput(label="何桁で勝負するか - 数字指定(最小:1,最大10)",style=discord.TextStyle.short,placeholder=f"デフォルト: 3 (最小:1,最大10)", required=False,min_length=1,max_length=2)
@@ -383,10 +383,10 @@ class hnb_settings(ui.Modal, title='Hit&Blow - ゲーム設定'):
         digit = 3 if self.digit.value =="" else int(self.digit.value)
         # options =[self.optionblow.value]
         options = []
-        evs = embedbox_game(interaction.user,isOnly=self.isOnly)
+        evs = embedbox_game(interaction.user,isonly=self.isonly)
         Embeds = evs.e_hnb_join(digit=digit,options=options)
         self.e_page.append(Embeds)
-        Views = hnb_joinview(author=self.author,isOnly=self.isOnly,e_page=self.e_page,v_page=self.v_page,digit=digit,options=options)
+        Views = hnb_joinview(author=self.author,isonly=self.isonly,e_page=self.e_page,v_page=self.v_page,digit=digit,options=options)
         return await interaction.response.edit_message(embed=Embeds,view=Views)
 
 class hnbjoinbutton(discord.ui.Button):
@@ -403,7 +403,7 @@ class hnbjoinbutton(discord.ui.Button):
             await interaction.response.send_message(content=(f"すでに参加済みです。"),ephemeral=True)
             return
         else:
-            evs = embedbox_game(author=self.author,isOnly=None,)
+            evs = embedbox_game(author=self.author,isonly=None,)
             Embeds = evs.e_hnb_join(interaction.user,digit=self.digit,options=self.options)
             Views = hnb_joinview(e_page=self.e_page,v_page=self.v_page,author=self.author,player=interaction.user,digit=self.digit,options=self.options) #ここのviewはv_pageに入れないように
             await interaction.response.edit_message(embed = Embeds,view=Views)
@@ -772,7 +772,7 @@ class getthelog(discord.ui.Button):
 class gametypelist():
     def __init__(self,gamedate) -> None:
         self.gamedate = gamedate
-        self.evs = embedbox_game(author=gamedate[1][0][0],isOnly=None)
+        self.evs = embedbox_game(author=gamedate[1][0][0],isonly=None)
         self.evshnb = embedbox_hnb(gamedate=self.gamedate)
     def gamelist(self,gametype,rematchtype = 0):
         if gametype == "hnb":
