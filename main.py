@@ -91,8 +91,8 @@ async def menu(ctx,isonly=None):
     embed = discord.Embed(title="メニュー",color=int(randomcolor, base=16),description="メニューを選択できます。")
     e_page = []
     v_page = []
-    embed.add_field(name="!role",value="ロールに関するメニュー",inline=True)
     embed.add_field(name="!game",value="ゲームメニュー",inline=True)
+    embed.add_field(name="!role",value="ロールに関するメニュー",inline=True)
     embed.add_field(name="!misc",value="その他、細かいもの",inline=True)
     print(type(isonly))
 
