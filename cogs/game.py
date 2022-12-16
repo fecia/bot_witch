@@ -238,12 +238,12 @@ class game_menu(commands.Cog):
     def __init__(self,bot) -> None:
         self.bot = bot
 
-    @commands.command()
-    async def game(self,ctx,isOnly=None):
+    @commands.hybrid_command()
+    async def game(self,ctx,isonly=None):
         author = ctx.author
         e_page =[]
         v_page =[]
-        await self.game_top(channel=ctx,author=author,isOnly=isOnly,e_page=e_page,v_page=v_page)
+        await self.game_top(channel=ctx,author=author,isOnly=isonly,e_page=e_page,v_page=v_page)
 
     async def game_top(self,channel:discord.Thread,author:discord.Member,*,isOnly = None,e_page:list = [],v_page:list = []):
         evs = embedbox_game(author,isOnly)

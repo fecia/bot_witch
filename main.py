@@ -2,7 +2,7 @@ import os
 from tokenize import Token
 
 import discord
-from discord import Embed, Role, SelectOption, User, ui
+from discord import Embed, Role, SelectOption, User, ui,app_commands
 from discord.ext import commands
 
 from dotenv import load_dotenv
@@ -26,8 +26,20 @@ Token = os.environ['TOKEN_KEY']
 
 # ---------------------------------------
 
+class Mybot(commands.Bot):
+    def __init__(self, *, intents: discord.Intents,command_prefix):
+        super().__init__(intents=intents,command_prefix=command_prefix)
+
+    async def setup_hook(self):
+        for cog in coglist:
+            await self.load_extension(cog)
+        MY_GUILD = discord.Object(751825027548053605)
+        self.tree.copy_global_to(guild=MY_GUILD)
+        await self.tree.sync(guild=MY_GUILD)
+
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix=bot_prefix, intents=intents)
+bot = Mybot(command_prefix=bot_prefix, intents=intents)
+tree = bot.tree
 
 # ---------------------------------------
 
@@ -42,24 +54,34 @@ coglist = [
 @bot.event
 async def on_ready():
     print(f'{bot.user} としてログインしています')
-    for cog in coglist:
-        await bot.load_extension(cog)
-@bot.listen("on_message")
-async def reload_cogs(msg):
-    if msg.author == bot.user:
-        return
-    if msg.content == "r":
-        for cog in coglist:
-            await bot.reload_extension(cog)
-        await msg.channel.send("リロード完了")
 
-# ----------------------------------------------------
+# @bot.listen("on_message")
+# async def reload_cogs(msg):
+#     if msg.author == bot.user:
+#         return
+#     if msg.content == "r":
+#         for cog in coglist:
+#             await bot.reload_extension(cog)
+#         await msg.channel.send("リロード完了")
 
+# コマンドテスト-----------------------------------------
+
+@bot.hybrid_command()  # ハイブリッドコマンド
+async def ping(ctx):
+    await ctx.reply("Pong!")
+@bot.tree.command(name="hello")
+async def hello(interaction: discord.Interaction):
+    """Says hello!"""
+    await interaction.response.send_message(f'Hi, {interaction.user.mention}')
+@bot.tree.command(name="slash",guild=discord.Object(id=751825027548053605))
+async def slash(interaction: discord.Interaction, number: int, string: str):
+    await interaction.response.send_message(f'{number=} {string=}', ephemeral=True)
 # ----------------------------------------------------
     
-@bot.command()
-async def menu(ctx,isOnly=None):
-    await ctx.message.delete(delay=1)
+@bot.hybrid_command()
+async def menu(ctx,isonly=None):
+    if ctx.interaction is None:
+        await ctx.message.delete(delay=1)
     # 変数作成のみ操作可能
     randomcolor = str("0x"+''.join([random.choice('0123456789ABCDEF') for j in range(6)]))
     author :discord.Member = ctx.author
@@ -72,12 +94,12 @@ async def menu(ctx,isOnly=None):
     embed.add_field(name="!role",value="ロールに関するメニュー",inline=True)
     embed.add_field(name="!game",value="ゲームメニュー",inline=True)
     embed.add_field(name="!misc",value="その他、細かいもの",inline=True)
-    print(type(isOnly))
+    print(type(isonly))
 
-    if isOnly =="1":
+    if isonly =="1":
         embed.set_footer(text=(f"{author_name}のみ操作可能"),icon_url=author_image)
         e_page.append(embed)
-        views = menu_button(author=author,isOnly=isOnly,e_page=e_page,v_page=v_page)
+        views = menu_button(author=author,isOnly=isonly,e_page=e_page,v_page=v_page)
     else:
         embed.set_footer(text=(f"{author_name}が作成"),icon_url=author_image)
         e_page.append(embed)

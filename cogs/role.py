@@ -114,12 +114,12 @@ class role_menu(commands.Cog):
     def __init__(self,bot) -> None:
         self.bot = bot
     
-    @commands.command()
-    async def role(self,ctx,isOnly=None):
+    @commands.hybrid_command()
+    async def role(self,ctx,isonly=None):
         author = ctx.author
         e_page =[]
         v_page =[]
-        await self.role_top(channel=ctx,author=author,isOnly=isOnly,e_page=e_page,v_page=v_page)
+        await self.role_top(channel=ctx,author=author,isOnly=isonly,e_page=e_page,v_page=v_page)
 
 
     async def role_top(self,channel:discord.Thread,author:discord.Member,*,isOnly = None,isTree:bool = False,e_page:list,v_page:list):
@@ -401,4 +401,5 @@ class roleselecter_json(discord.ui.Select):
 
 async def setup(bot):
     await bot.add_cog(role_menu(bot))
+
     print(f"role読み込み")
