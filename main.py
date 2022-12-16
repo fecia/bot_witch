@@ -13,7 +13,8 @@ import datetime
 from zoneinfo import ZoneInfo
 import json
 import random
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter,ImageDraw,ImageFont
+import io
 
 from cogs.role import *
 from cogs.miscellaneous import miscmenu_view, miscmenu_page
@@ -208,9 +209,12 @@ class registerconfirm(discord.ui.View):
             "name": user.name,
             "id" : user.id,
             "registerdate": result,
-            "battle":"0",
-            "win"   :"0",
-            "draw"  :"0"
+            "hnb":{
+                "battle": 0,
+                "win": 0,
+                "draw": 0,
+                "recent":"ddddd"
+                }
             }
             path = "./bot_witch/users/" + str(user.id) + ".json"
             with open(path, "w") as file:
@@ -267,10 +271,54 @@ class testbutton(discord.ui.Button):
 
 @bot.command()
 async def test2(ctx):
-    # newimg = Image.new("RGB",(300,150),(255,0,0))
-    # dirimg = Image.open("./bot_witch/test.png","RGB")
-    file = discord.File("./bot_witch/test.png",filename="image.png")
+    path = f"./bot_witch/users/{ctx.author.id}.json"
+    if not os.path.isfile(path=path):
+        return await ctx.send("データ無し !register")
+    else:
+        with open(path,"r") as file:
+            userinfo = json.load(file)
+    
+    with open(path,"r") as date:
+        info = json.load(date)
+    iconbyte = await ctx.author.display_avatar.read()
+    icon = Image.open(io.BytesIO(iconbyte))
+    icon = icon.resize((200,200))
+    alpha = Image.new("RGBA", icon.size, (255, 255, 255, 0))
+    background = Image.open("./bot_witch/background.png")
+    # background = Image.new("RGBA",(1000,300),(R,G,B,255))
+    background_draw = ImageDraw.Draw(background)
+    font = ImageFont.truetype("msgothic.ttc", 48)
+    textink ="#0a3758"
+    background_draw.text((290,55),"ヒット＆ブロー",fill=textink,font=font)
+    background_draw.multiline_text((310,135),f"総試合数:\n{info['hnb']['battle']}:"
+                            ,fill=textink,font=font,spacing=4,align="right")
+    background_draw.multiline_text((595,135),f"勝ち:\n{info['hnb']['win']}:"
+                            ,fill=textink,font=font,spacing=4,align="right")
+    background_draw.multiline_text((775,135),f"引き分け:\n{info['hnb']['draw']}:"
+                            ,fill=textink,font=font,spacing=4,align="right")
+    mask = Image.new("L", icon.size, 0)
+    mask_draw = ImageDraw.Draw(mask)
+    mask_draw.ellipse((0, 0, 199, 199), fill=255)
+    icon_c = Image.composite(icon, alpha, mask)
+
+    background.paste(im=icon_c,box=(50,50),mask=icon_c)
+    bufferimg = io.BytesIO()
+    background.save(bufferimg,"png")
+    bufferimg.seek(0)
+
+    img = discord.File(bufferimg,filename="image.png")
     Embeds = discord.Embed(title="test")
     Embeds.set_image(url="attachment://image.png")
-    await ctx.send(file=file,embed=Embeds)
+    await ctx.send(file=img,embed=Embeds)
+
+@bot.command()
+async def test3(ctx,gamename = "hnb",isdraw = None):
+    path = f"./bot_witch/users/{ctx.author.id}.json"
+    with open(path,"r") as file:
+        text = json.load(file)
+    with open(path,"w") as file:
+        text[gamename]["win"] += 1
+        text[gamename]["battle"] +=1
+        json.dump(text,file,indent=4)
+
 bot.run(Token)

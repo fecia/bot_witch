@@ -94,7 +94,7 @@ class prevbutton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         del self.e_page[-1]
         del self.v_page[-1]
-        await interaction.response.edit_message(embed=self.e_page[-1],view=self.v_page[-1])
+        await interaction.response.edit_message(embed=self.e_page[-1],view=self.v_page[-1],attachments=[])
         print((f"今のページ数はVは{len(self.v_page)}でEは{len(self.e_page)}です"))
 
 class mypage():

@@ -4,6 +4,11 @@ from discord.ext import commands
 
 import os
 import random
+import json
+from PIL import Image, ImageFilter,ImageDraw,ImageFont
+import datetime
+from zoneinfo import ZoneInfo
+import io
 
 from cogs.role import prevbutton
 
@@ -14,7 +19,7 @@ class embedbox_game():
     
     def e_game_top(self) -> discord.Embed:
         Embeds = discord.Embed(title="ゲームメニュー",color=0xffffff,description="ここではゲームに関する操作ができます。")
-        Embeds.add_field(name=(f"・!hnb (ヒット&ブロー)"), value=(f"ヒット&ブロー"))
+        Embeds.add_field(name=(f"・!hnb (Hit&Blow)"), value=(f"Hit&Blow"))
         Embeds.add_field(name=(f'・なし'), value=(f'なしなしなしなしなし'))
         if(self.isOnly == "1"):
             Embeds.set_footer(text=(f"{self.author.display_name}のみ操作可能"),icon_url=self.author.display_avatar.url)
@@ -23,7 +28,7 @@ class embedbox_game():
         return Embeds
 
     def e_hnb_top(self,startname,startdescription,isdm:bool) -> discord.Embed:
-        Embeds = discord.Embed(title="ヒット&ブロー",color=0xffffff,)
+        Embeds = discord.Embed(title="Hit&Blow",color=0xffffff,)
         Embeds.add_field(name=startname, value=startdescription)
         Embeds.add_field(name=(f'・戦績'), value=(f'戦績を表示します。'))
 
@@ -53,6 +58,61 @@ class embedbox_game():
         Embeds = discord.Embed(colour=discord.Colour.red())
         Embeds.add_field(name="エラー:ゲームIDを取得することができませんでした。",value="もう一度部屋を作り直してください。")
         return Embeds
+        
+    async def hnbstats(self,):
+        path = f"./bot_witch/users/{self.author.id}.json"
+        if not os.path.isfile(path=path):
+            user :discord.Member= self.author
+            tz = ZoneInfo('Asia/Tokyo')
+            timedate = datetime.datetime.now(tz=tz)
+            result = timedate.strftime('%Y/%m/%d (%Z)')
+            json_data ={
+            "name": user.name,
+            "id" : user.id,
+            "registerdate": result,
+            "hnb":{
+                "battle": 0,
+                "win": 0,
+                "draw": 0,
+                "recent":"ddddd"
+                }
+            }
+            path = "./bot_witch/users/" + str(user.id) + ".json"
+            with open(path, "w") as file:
+                json.dump(json_data,file,indent=4)    # 追加する値を入力
+        
+        with open(path,"r") as date:
+            info = json.load(date)
+            iconbyte = await self.author.display_avatar.read()
+            icon = Image.open(io.BytesIO(iconbyte))
+            icon = icon.resize((200,200))
+            alpha = Image.new("RGBA", icon.size, (255, 255, 255, 0))
+            background = Image.open("./bot_witch/background.png")
+            background_draw = ImageDraw.Draw(background)
+            font = ImageFont.truetype("msgothic.ttc", 48)
+            textink ="#0a3758"
+            background_draw.text((290,55),"Hit&Blow",fill=textink,font=font)
+            background_draw.multiline_text((310,135),f"総試合数:\n{info['hnb']['battle']}:"
+                                    ,fill=textink,font=font,spacing=4,align="right")
+            background_draw.multiline_text((595,135),f"勝ち:\n{info['hnb']['win']}:"
+                                    ,fill=textink,font=font,spacing=4,align="right")
+            background_draw.multiline_text((775,135),f"引き分け:\n{info['hnb']['draw']}:"
+                                    ,fill=textink,font=font,spacing=4,align="right")
+            mask = Image.new("L", icon.size, 0)
+            mask_draw = ImageDraw.Draw(mask)
+            mask_draw.ellipse((0, 0, 199, 199), fill=255)
+            icon_c = Image.composite(icon, alpha, mask)
+
+            background.paste(im=icon_c,box=(50,50),mask=icon_c)
+            bufferimg = io.BytesIO()
+            background.save(bufferimg,"png")
+            bufferimg.seek(0)
+
+            img = discord.File(bufferimg,filename="image.png")
+            Embeds = discord.Embed(title=f"{self.author.display_name}の戦績")
+            Embeds.set_image(url="attachment://image.png")
+            return img,Embeds
+
 
 class embedbox_hnb():
     def __init__(self,gamedate) -> None:
@@ -68,6 +128,7 @@ class embedbox_hnb():
         self.p2info = gamedate[1][2]
         self.p1 = gamedate[1][1][0]
         self.p2 = gamedate[1][2][0]
+        self.result = gamedate[0][4]
         self.winner = gamedate[0][4][0]
         self.loser = gamedate[0][4][1]
         self.gamedate = gamedate
@@ -123,6 +184,8 @@ class embedbox_hnb():
         return Embeds
 
     def e_hnb_winresult(self,gamedate,) -> discord.Embed:
+        self.savestats(self.winner,"win")
+        self.savestats(self.loser)
         Embeds = discord.Embed(colour=self.author.colour,title=f"勝利:{self.winner.display_name}",description=f"敗北:{self.loser.display_name}")
         Embeds.add_field(name=(f'・先攻'), value=(f' {self.p1.mention}\n番号:{self.p1info[1]}'),inline=True)
         Embeds.add_field(name=(f'・後攻'), value=(f' {self.p2.mention}\n番号:{self.p2info[1]}'),inline=True)
@@ -133,6 +196,8 @@ class embedbox_hnb():
         return Embeds
 
     def e_hnb_drawresult(self,gamedate,) -> discord.Embed:
+        self.savestats(self.winner,"draw")
+        self.savestats(self.loser,"draw")
         Embeds = discord.Embed(color=gamedate[1][0][0].accent_color,title=f"引き分け")
         Embeds.add_field(name=(f'・先攻'), value=(f' {self.p1.mention}\n番号:{self.p1info[1]}'),inline=True)
         Embeds.add_field(name=(f'・後攻'), value=(f' {self.p2.mention}\n番号:{self.p2info[1]}'),inline=True)
@@ -157,6 +222,17 @@ class embedbox_hnb():
         Embeds.add_field(name=(f'桁数'), value=(f'{self.digit}桁'),inline=True)
         Embeds.set_footer(text=(f"ゲームID:{self.gameid}"),icon_url=self.author.display_avatar.url)
         return Embeds
+
+    def savestats(self,user,result=None):
+        path = f"./bot_witch/users/{user.id}.json"
+        with open(path,"r") as file:
+            text = json.load(file)
+        with open(path,"w") as file:
+            if result is not None:
+                text[self.gametype][result] += 1
+            text[self.gametype]["battle"] +=1
+            json.dump(text,file,indent=4)
+        return
 
 class game_menu(commands.Cog):
     def __init__(self,bot) -> None:
@@ -332,6 +408,12 @@ class hnbjoinbutton(discord.ui.Button):
             Views = hnb_joinview(e_page=self.e_page,v_page=self.v_page,author=self.author,player=interaction.user,digit=self.digit,options=self.options) #ここのviewはv_pageに入れないように
             await interaction.response.edit_message(embed = Embeds,view=Views)
 
+class hnb_statsview(discord.ui.View):
+    def __init__(self,e_page:list = [],v_page:list = []):
+        super().__init__(timeout=None)
+        v_page.append(self)
+        self.add_item(prevbutton(e_page,v_page))
+
 class hnbstatsbutton(discord.ui.Button):
     def __init__(self,e_page:list = [],v_page:list = []):
         super().__init__(label="戦績",style=discord.ButtonStyle.blurple)
@@ -339,7 +421,12 @@ class hnbstatsbutton(discord.ui.Button):
         self.v_page = v_page
 
     async def callback(self, interaction: discord.Interaction):
-        pass
+        evs = embedbox_game(interaction.user,None)
+        img , Embeds = await evs.hnbstats()
+        attachments = [img]
+        self.e_page.append(Embeds)
+        Views = hnb_statsview(self.e_page,self.v_page)
+        await interaction.response.edit_message(embed=Embeds,attachments=attachments,view=Views)
 
 class hnbstartbutton(discord.ui.Button):
     def __init__(self,label="開始",e_page:list = [],v_page:list = [],author:discord.Member =None,player:discord.Member = None,digit:str = 3,options:list = []):
