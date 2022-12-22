@@ -79,6 +79,7 @@ async def slash(interaction: discord.Interaction, number: int, string: str):
 # ----------------------------------------------------
     
 @bot.hybrid_command()
+@app_commands.describe(isonly="1で入力者のみ操作可能にする。")
 async def menu(ctx,isonly=None):
     if ctx.interaction is None:
         await ctx.message.delete(delay=1)

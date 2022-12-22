@@ -446,6 +446,7 @@ class hnbstartbutton(discord.ui.Button):
         playerlist =[self.author,self.player]
         if interaction.user.id == self.author.id:
             x = 1 if random.random() >= 0.5 else 0
+            print(x)
             if x:
                 p1 = self.author
                 p2 = self.player

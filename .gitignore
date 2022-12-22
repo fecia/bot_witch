@@ -110,12 +110,12 @@ ENV/
 env.bak/
 venv.bak/
 #付け足したよよおよよよよ
-guilds
-users
-hitandblow
+guilds/*
+users/*
+hitandblow/*
 Dockerfile
 requirements.txt
-memopy
+memopy/*
 
 # Spyder project settings
 .spyderproject
